@@ -58,6 +58,7 @@ dependencies {
     implementation(libs.androidx.material3)
 
     implementation(libs.kotlinx.datetime)
+    implementation(libs.androidx.compose.navigation)
 
     testImplementation(libs.junit)
 

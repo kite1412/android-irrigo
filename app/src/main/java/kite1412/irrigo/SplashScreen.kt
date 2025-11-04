@@ -1,9 +1,12 @@
 package kite1412.irrigo
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -17,8 +20,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -35,16 +36,16 @@ import androidx.compose.ui.unit.sp
 import kite1412.irrigo.designsystem.theme.Gray
 import kite1412.irrigo.designsystem.theme.IrrigoTheme
 import kite1412.irrigo.designsystem.theme.Quicksand
+import kite1412.irrigo.designsystem.theme.Red
 import kite1412.irrigo.designsystem.util.IrrigoIcon
 import kite1412.irrigo.ui.util.screenBackground
 import kotlinx.coroutines.delay
 
 @Composable
 fun SplashScreen(
-    onComplete: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
 ) {
-    val onComplete by rememberUpdatedState(onComplete)
     var showText by rememberSaveable {
         mutableStateOf(false)
     }
@@ -60,17 +61,16 @@ fun SplashScreen(
         delay(1000L)
         delay(exitDuration / 2)
         exit = true
-        onComplete()
     }
-    AnimatedVisibility(
-        visible = !exit,
-        modifier = modifier,
-        exit = fadeOut()
+    AnimatedContent(
+        targetState = !exit,
+        transitionSpec = { fadeIn() togetherWith fadeOut() },
+        modifier = modifier
+            .fillMaxSize()
+            .screenBackground()
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .screenBackground()
+        if (it) Box(
+            modifier = Modifier.fillMaxSize()
         ) {
             Row(
                 modifier = Modifier.align(Alignment.Center),
@@ -123,26 +123,19 @@ fun SplashScreen(
                     )
                 )
             }
-        }
+        } else content()
     }
 }
 
 @Preview
 @Composable
 private fun SplashScreenPreview() {
-    var showContent by remember { mutableStateOf(false) }
-
     IrrigoTheme {
-        SplashScreen(
-            onComplete = { showContent = true }
-        )
-        AnimatedVisibility(
-            visible = showContent,
-            modifier = Modifier.fillMaxSize()
-        ) {
-            Text(
-                text = "A content",
-                style = MaterialTheme.typography.titleSmall
+        SplashScreen {
+            Box(
+                modifier = Modifier
+                    .size(90.dp)
+                    .background(Red)
             )
         }
     }
