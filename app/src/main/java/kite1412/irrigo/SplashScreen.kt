@@ -58,7 +58,7 @@ fun SplashScreen(
         delay(500L)
         showText = true
         // arbitrary delay value
-        delay(1000L)
+        delay(1500L)
         delay(exitDuration / 2)
         exit = true
     }
