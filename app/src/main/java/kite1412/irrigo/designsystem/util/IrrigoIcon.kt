@@ -9,4 +9,5 @@ object IrrigoIcon {
     val chart = R.drawable.chart
     val sliders = R.drawable.sliders
     val clipboard = R.drawable.clipboard
+    val waterDrop = R.drawable.water_drop
 }

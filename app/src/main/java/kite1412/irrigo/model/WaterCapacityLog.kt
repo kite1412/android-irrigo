@@ -6,5 +6,6 @@ data class WaterCapacityLog(
     val id: Int,
     val device: Device,
     val timestamp: Instant,
-    val currentLiters: Float
+    val currentHeightCm: Double,
+    val currentLitres: Double? = null
 )
