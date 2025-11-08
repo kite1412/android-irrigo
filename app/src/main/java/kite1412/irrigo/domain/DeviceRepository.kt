@@ -7,4 +7,5 @@ interface DeviceRepository {
     suspend fun getDevices(): List<Device>
     suspend fun getDeviceById(id: Int): Device?
     suspend fun getWaterContainer(deviceId: Int): WaterContainer?
+    suspend fun sendWateringSignal(deviceId: Int): Boolean
 }

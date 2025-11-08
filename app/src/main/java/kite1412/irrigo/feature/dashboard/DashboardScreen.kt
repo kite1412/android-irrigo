@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -98,7 +99,8 @@ fun DashboardScreen(
                     waterContainer = waterContainer,
                     latestWaterCapacityLog = latestWaterCapacityLog,
                     latestWateringLogs = latestWateringLogs,
-                    onMoreWateringLog = {}
+                    onMoreWateringLog = {},
+                    onWateringClick = {}
                 )
             }
         }
@@ -229,6 +231,7 @@ private fun DeviceControlSection(
     latestWaterCapacityLog: WaterCapacityLog?,
     latestWateringLogs: List<WateringLog>?,
     onMoreWateringLog: () -> Unit,
+    onWateringClick: () -> Unit,
     modifier: Modifier = Modifier
 ) = Section(
     name = "Kontrol Perangkat",
@@ -252,17 +255,19 @@ private fun DeviceControlSection(
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .fillMaxHeight()
+                    .fillMaxHeight(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 LatestWateringLogs(
                     latestLogs = latestWateringLogs,
                     onMoreClick = onMoreWateringLog,
-                    modifier = Modifier.weight(4f)
+                    modifier = Modifier.weight(5f)
                 )
-                Box(
+                WaterPlants(
+                    onClick = onWateringClick,
                     modifier = Modifier
                         .weight(2f)
-                        .background(Color.Black)
+                        .fillMaxSize()
                 )
             }
         }
@@ -461,5 +466,48 @@ private fun LatestWateringLogs(
                 fontStyle = FontStyle.Italic
             )
         )
+    }
+}
+
+@Composable
+private fun WaterPlants(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .clip(RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colorScheme.primary)
+            .padding(
+                horizontal = 16.dp
+            )
+            .clickable(
+                indication = null,
+                interactionSource = null,
+                onClick = onClick
+            ),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(
+            space = 8.dp,
+            alignment = Alignment.End
+        )
+    ) {
+        val textStyle = LocalTextStyle.current
+
+        CompositionLocalProvider(
+            LocalContentColor provides Color.White
+        ) {
+            Text(
+                text = "Siram",
+                style = textStyle.copy(
+                    fontWeight = FontWeight.Bold
+                )
+            )
+            Icon(
+                painter = painterResource(IrrigoIcon.waterSpray),
+                contentDescription = "siram",
+                modifier = Modifier.size((textStyle.fontSize.value * 2f).dp)
+            )
+        }
     }
 }

@@ -10,4 +10,5 @@ class MockDeviceRepository @Inject constructor() : DeviceRepository {
 
     override suspend fun getDeviceById(id: Int): Device? = MockData.devices.firstOrNull()
     override suspend fun getWaterContainer(deviceId: Int): WaterContainer? = MockData.waterContainer
+    override suspend fun sendWateringSignal(deviceId: Int): Boolean = true
 }
