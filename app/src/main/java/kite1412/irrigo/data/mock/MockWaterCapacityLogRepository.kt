@@ -17,7 +17,7 @@ class MockWaterCapacityLogRepository @Inject constructor() : WaterCapacityLogRep
             delay(500L)
 
             val random = Random.nextDouble(
-                from = 0.0,
+                from = 0.7,
                 until = 1.0
             )
             trySend(

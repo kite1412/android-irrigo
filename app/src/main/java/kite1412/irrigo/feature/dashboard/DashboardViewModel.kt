@@ -10,12 +10,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kite1412.irrigo.data.mock.MockWateringLogRepository
 import kite1412.irrigo.domain.DeviceRepository
 import kite1412.irrigo.domain.WaterCapacityLogRepository
 import kite1412.irrigo.feature.dashboard.util.DashboardUiEvent
 import kite1412.irrigo.model.Device
 import kite1412.irrigo.model.WaterCapacityLog
 import kite1412.irrigo.model.WaterContainer
+import kite1412.irrigo.model.WateringLog
 import kite1412.irrigo.util.IntPreferencesKey
 import kite1412.irrigo.util.getPreference
 import kite1412.irrigo.util.updatePreferences
@@ -30,13 +32,16 @@ import javax.inject.Inject
 class DashboardViewModel @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val deviceRepository: DeviceRepository,
-    private val waterCapacityLogRepository: WaterCapacityLogRepository
+    private val waterCapacityLogRepository: WaterCapacityLogRepository,
+    private val wateringLogRepository: MockWateringLogRepository
 ) : ViewModel() {
     var device by mutableStateOf<Device?>(null)
         private set
     var latestWaterCapacityLog = emptyFlow<WaterCapacityLog>()
+        private set
     var waterContainer by mutableStateOf<WaterContainer?>(null)
         private set
+    var latestWateringLogs = emptyFlow<List<WateringLog>>()
     private val _uiEvent = MutableSharedFlow<DashboardUiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
 
@@ -79,6 +84,7 @@ class DashboardViewModel @Inject constructor(
                         "deviceId: ${newDevice.id}, latest water cap log: ${it.currentHeightCm}cm"
                     )
                 }
+            latestWateringLogs = wateringLogRepository.getWateringLogsFlow(newDevice.id)
         }
     }
 }

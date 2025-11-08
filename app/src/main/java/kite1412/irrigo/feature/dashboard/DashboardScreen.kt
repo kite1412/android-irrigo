@@ -15,8 +15,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -59,10 +61,12 @@ import kite1412.irrigo.designsystem.theme.DarkGray
 import kite1412.irrigo.designsystem.theme.DarkPastelBlue
 import kite1412.irrigo.designsystem.theme.PastelBlue
 import kite1412.irrigo.designsystem.util.IrrigoIcon
+import kite1412.irrigo.feature.dashboard.util.getLocalInstantInfo
 import kite1412.irrigo.feature.dashboard.util.getWaterLevelPercentString
 import kite1412.irrigo.model.Device
 import kite1412.irrigo.model.WaterCapacityLog
 import kite1412.irrigo.model.WaterContainer
+import kite1412.irrigo.model.WateringLog
 import kotlin.math.max
 
 @Composable
@@ -73,6 +77,7 @@ fun DashboardScreen(
     val device = viewModel.device
     val latestWaterCapacityLog by viewModel.latestWaterCapacityLog.collectAsStateWithLifecycle(null)
     val waterContainer = viewModel.waterContainer
+    val latestWateringLogs by viewModel.latestWateringLogs.collectAsStateWithLifecycle(null)
 
     AnimatedContent(
         targetState = device,
@@ -91,7 +96,9 @@ fun DashboardScreen(
             item {
                 DeviceControlSection(
                     waterContainer = waterContainer,
-                    latestWaterCapacityLog = latestWaterCapacityLog
+                    latestWaterCapacityLog = latestWaterCapacityLog,
+                    latestWateringLogs = latestWateringLogs,
+                    onMoreWateringLog = {}
                 )
             }
         }
@@ -220,14 +227,18 @@ private fun DeviceSelect(
 private fun DeviceControlSection(
     waterContainer: WaterContainer?,
     latestWaterCapacityLog: WaterCapacityLog?,
+    latestWateringLogs: List<WateringLog>?,
+    onMoreWateringLog: () -> Unit,
     modifier: Modifier = Modifier
 ) = Section(
     name = "Kontrol Perangkat",
     modifier = modifier
 ) {
     Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(IntrinsicSize.Max),
+        verticalArrangement = Arrangement.spacedBy(32.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -241,10 +252,18 @@ private fun DeviceControlSection(
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .height(50.dp)
-                    .background(Color.Black)
+                    .fillMaxHeight()
             ) {
-
+                LatestWateringLogs(
+                    latestLogs = latestWateringLogs,
+                    onMoreClick = onMoreWateringLog,
+                    modifier = Modifier.weight(4f)
+                )
+                Box(
+                    modifier = Modifier
+                        .weight(2f)
+                        .background(Color.Black)
+                )
             }
         }
     }
@@ -357,5 +376,90 @@ private fun WaterCapacity(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun LatestWateringLogs(
+    latestLogs: List<WateringLog>?,
+    onMoreClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .border(
+                width = 2.dp,
+                color = MaterialTheme.colorScheme.onBackground,
+                shape = RoundedCornerShape(16.dp)
+            )
+            .clickable(
+                indication = null,
+                interactionSource = null,
+                onClick = onMoreClick
+            )
+            .padding(8.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            CompositionLocalProvider(
+                LocalContentColor provides Color.Black
+            ) {
+                val textStyle = LocalTextStyle.current
+
+                Text(
+                    text = "Log Penyiraman",
+                    style = textStyle.copy(
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+                Icon(
+                    painter = painterResource(IrrigoIcon.arrowRight),
+                    contentDescription = "more",
+                    modifier = Modifier.size((textStyle.fontSize.value * 1.4f).dp)
+                )
+            }
+        }
+        if (latestLogs != null) {
+            if (latestLogs.isNotEmpty()) Column(
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                latestLogs.take(4).forEachIndexed { i, e ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        val instantInfo = remember(e.timestamp) {
+                            e.timestamp.getLocalInstantInfo()
+                        }
+
+                        CompositionLocalProvider(
+                            LocalTextStyle provides MaterialTheme.typography.bodySmall.copy(
+                                fontStyle = FontStyle.Italic,
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        ) {
+                            Text("${i + 1}. ${instantInfo.day}")
+                            Text(instantInfo.time)
+                        }
+                    }
+                }
+            } else Text(
+                text = "Tidak ada log penyiraman.",
+                style = MaterialTheme.typography.bodySmall.copy(
+                    fontStyle = FontStyle.Italic,
+                    color = DarkGray
+                )
+            )
+        } else Text(
+            text = "Mencari log penyiraman",
+            style = MaterialTheme.typography.bodySmall.copy(
+                fontStyle = FontStyle.Italic
+            )
+        )
     }
 }
