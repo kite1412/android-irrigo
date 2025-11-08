@@ -44,8 +44,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
@@ -100,7 +100,8 @@ fun DashboardScreen(
                     latestWaterCapacityLog = latestWaterCapacityLog,
                     latestWateringLogs = latestWateringLogs,
                     onMoreWateringLog = {},
-                    onWateringClick = {}
+                    onWateringClick = {},
+                    onAutomatedWateringClick = {}
                 )
             }
         }
@@ -232,46 +233,45 @@ private fun DeviceControlSection(
     latestWateringLogs: List<WateringLog>?,
     onMoreWateringLog: () -> Unit,
     onWateringClick: () -> Unit,
+    onAutomatedWateringClick: () -> Unit,
     modifier: Modifier = Modifier
 ) = Section(
     name = "Kontrol Perangkat",
     modifier = modifier
 ) {
-    Column(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
             .height(IntrinsicSize.Max),
-        verticalArrangement = Arrangement.spacedBy(32.dp)
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        WaterCapacity(
+            latest = latestWaterCapacityLog,
+            waterContainer = waterContainer,
+            modifier = Modifier.weight(1f)
+        )
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight(),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            WaterCapacity(
-                latest = latestWaterCapacityLog,
-                waterContainer = waterContainer,
-                modifier = Modifier.weight(1f)
+            LatestWateringLogs(
+                latestLogs = latestWateringLogs,
+                onMoreClick = onMoreWateringLog,
+                modifier = Modifier.weight(5f)
             )
-            Column(
+            WaterPlants(
+                onClick = onWateringClick,
                 modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                LatestWateringLogs(
-                    latestLogs = latestWateringLogs,
-                    onMoreClick = onMoreWateringLog,
-                    modifier = Modifier.weight(5f)
-                )
-                WaterPlants(
-                    onClick = onWateringClick,
-                    modifier = Modifier
-                        .weight(2f)
-                        .fillMaxSize()
-                )
-            }
+                    .weight(2f)
+                    .fillMaxSize()
+            )
         }
     }
+    AutomatedWatering(
+        onClick = onAutomatedWateringClick
+    )
 }
 
 @Composable
@@ -311,15 +311,19 @@ private fun WaterCapacity(
             .toFloat()
             .coerceIn(0f, 1f) * max(1f, containerHeightPx)
     )
+    val shape = RoundedCornerShape(16.dp)
 
     Box(
         modifier = modifier
             .aspectRatio(1f)
             .fillMaxWidth()
+            .shadow(
+                elevation = 4.dp,
+                shape = shape
+            )
             .onSizeChanged {
                 containerHeightPx = it.height.toFloat()
             }
-            .clip(RoundedCornerShape(16.dp))
             .background(background)
             .drawBehind {
                 val offsetY = size.height - progressHeight
@@ -474,9 +478,14 @@ private fun WaterPlants(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val shape = RoundedCornerShape(16.dp)
+
     Row(
         modifier = modifier
-            .clip(RoundedCornerShape(16.dp))
+            .shadow(
+                elevation = 4.dp,
+                shape = shape
+            )
             .background(MaterialTheme.colorScheme.primary)
             .padding(
                 horizontal = 16.dp
@@ -507,6 +516,51 @@ private fun WaterPlants(
                 painter = painterResource(IrrigoIcon.waterSpray),
                 contentDescription = "siram",
                 modifier = Modifier.size((textStyle.fontSize.value * 2f).dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun AutomatedWatering(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    CompositionLocalProvider(
+        LocalContentColor provides MaterialTheme.colorScheme.secondary
+    ) {
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .border(
+                    width = 2.dp,
+                    shape = RoundedCornerShape(8.dp),
+                    color = LocalContentColor.current
+                )
+                .clickable(
+                    indication = null,
+                    interactionSource = null,
+                    onClick = onClick
+                )
+                .padding(
+                    vertical = 8.dp,
+                    horizontal = 16.dp
+                ),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            val textStyle = LocalTextStyle.current
+
+            Text(
+                text = "Penyiraman Otomatis",
+                style = textStyle.copy(
+                    fontWeight = FontWeight.Bold
+                )
+            )
+            Icon(
+                painter = painterResource(IrrigoIcon.timerReset),
+                contentDescription = null,
+                modifier = Modifier.size((textStyle.fontSize.value * 2).dp)
             )
         }
     }

@@ -18,14 +18,13 @@ fun Instant.getLocalInstantInfo(): LocalInstantInfo = with(toLocalDateTime()) {
             Locale("id", "ID")
         }
     )
+    val timeFormatter = DateTimeFormatter.ofPattern("H:mm")
     val now = now()
 
     LocalInstantInfo(
         day = if (now.toLocalDateTime().date == date) "Hari Ini"
             else if ((now - 1.days).toLocalDateTime().date == date) "Kemarin"
             else formatter.format(toJavaLocalDateTime()),
-        time = with(time) {
-            "$hour:$minute"
-        }
+        time = timeFormatter.format(toJavaLocalDateTime())
     )
 }
