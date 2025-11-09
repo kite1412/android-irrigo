@@ -7,6 +7,7 @@ import androidx.compose.animation.core.animateDp
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -25,8 +26,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.HorizontalDivider
@@ -37,6 +40,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -44,34 +48,44 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
+import androidx.compose.ui.window.Popup
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kite1412.irrigo.designsystem.theme.DarkGray
 import kite1412.irrigo.designsystem.theme.DarkPastelBlue
+import kite1412.irrigo.designsystem.theme.Gray
 import kite1412.irrigo.designsystem.theme.PastelBlue
+import kite1412.irrigo.designsystem.theme.Red
+import kite1412.irrigo.designsystem.theme.bodyExtraSmall
 import kite1412.irrigo.designsystem.util.IrrigoIcon
 import kite1412.irrigo.feature.dashboard.util.getLocalInstantInfo
 import kite1412.irrigo.feature.dashboard.util.getWaterLevelPercentString
 import kite1412.irrigo.model.Device
+import kite1412.irrigo.model.SoilMoistureLog
 import kite1412.irrigo.model.WaterCapacityLog
 import kite1412.irrigo.model.WaterContainer
 import kite1412.irrigo.model.WateringLog
+import kotlinx.coroutines.delay
 import kotlin.math.max
 
 @Composable
 fun DashboardScreen(
+    onSoilMoistureSettingClick: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
@@ -79,6 +93,8 @@ fun DashboardScreen(
     val latestWaterCapacityLog by viewModel.latestWaterCapacityLog.collectAsStateWithLifecycle(null)
     val waterContainer = viewModel.waterContainer
     val latestWateringLogs by viewModel.latestWateringLogs.collectAsStateWithLifecycle(null)
+    val latestSoilMoistureLog by viewModel.latestSoilMoistureLog.collectAsStateWithLifecycle(null)
+    val wateringConfig = viewModel.wateringConfig
 
     AnimatedContent(
         targetState = device,
@@ -95,14 +111,26 @@ fun DashboardScreen(
                 )
             }
             item {
-                DeviceControlSection(
-                    waterContainer = waterContainer,
-                    latestWaterCapacityLog = latestWaterCapacityLog,
-                    latestWateringLogs = latestWateringLogs,
-                    onMoreWateringLog = {},
-                    onWateringClick = {},
-                    onAutomatedWateringClick = {}
-                )
+                Column(
+                    modifier = Modifier.padding(
+                        horizontal = 8.dp
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(32.dp)
+                ) {
+                    DeviceControlSection(
+                        waterContainer = waterContainer,
+                        latestWaterCapacityLog = latestWaterCapacityLog,
+                        latestWateringLogs = latestWateringLogs,
+                        onMoreWateringLog = {},
+                        onWateringClick = {},
+                        onAutomatedWateringClick = {}
+                    )
+                    SoilMoisture(
+                        latest = latestSoilMoistureLog,
+                        minPercentage = wateringConfig?.minSoilMoisturePercent,
+                        onMinSettingClick = onSoilMoistureSettingClick
+                    )
+                }
             }
         }
     }
@@ -447,13 +475,19 @@ private fun LatestWateringLogs(
                         }
 
                         CompositionLocalProvider(
-                            LocalTextStyle provides MaterialTheme.typography.bodySmall.copy(
+                            LocalTextStyle provides MaterialTheme.typography.bodyExtraSmall.copy(
                                 fontStyle = FontStyle.Italic,
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         ) {
-                            Text("${i + 1}. ${instantInfo.day}")
-                            Text(instantInfo.time)
+                            Text(
+                                text = "${i + 1}. ${instantInfo.day}",
+                                modifier = Modifier.weight(8f)
+                            )
+                            Text(
+                                text = instantInfo.time,
+                                modifier = Modifier.weight(2f)
+                            )
                         }
                     }
                 }
@@ -563,5 +597,253 @@ private fun AutomatedWatering(
                 modifier = Modifier.size((textStyle.fontSize.value * 2).dp)
             )
         }
+    }
+}
+
+@Composable
+private fun SoilMoisture(
+    latest: SoilMoistureLog?,
+    minPercentage: Float?,
+    onMinSettingClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .border(
+                width = 2.dp,
+                color = MaterialTheme.colorScheme.onBackground,
+                shape = RoundedCornerShape(16.dp)
+            )
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Text(
+            text = "Kelembaban Tanah",
+            style = LocalTextStyle.current.copy(
+                fontWeight = FontWeight.Bold
+            )
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(IntrinsicSize.Max),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            SoilMoistureIndicator(
+                min = minPercentage,
+                value = latest?.moisturePercent,
+                modifier = Modifier.weight(4f)
+            )
+            Column(
+                modifier = Modifier
+                    .weight(6f)
+                    .fillMaxHeight(),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        SoilMoistureStatus(
+                            status = "Batas Minimum",
+                            color = Red
+                        )
+                        Box {
+                            var showInfo by remember { mutableStateOf(false) }
+
+                            Icon(
+                                painter = painterResource(IrrigoIcon.about),
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .size(12.dp)
+                                    .clickable(
+                                        indication = null,
+                                        interactionSource = null
+                                    ) { showInfo = !showInfo },
+                                tint = DarkGray
+                            )
+                            if (showInfo) Popup(
+                                onDismissRequest = { showInfo = false }
+                            ) {
+                                val shape = RoundedCornerShape(16.dp)
+
+                                Text(
+                                    text = "Batas minimum kelembaban untuk penyiraman otomatis",
+                                    modifier = Modifier
+                                        .background(
+                                            color = MaterialTheme.colorScheme.primary,
+                                            shape = shape
+                                        )
+                                        .border(
+                                            width = 1.dp,
+                                            color = MaterialTheme.colorScheme.onBackground,
+                                            shape = shape
+                                        )
+                                        .padding(16.dp)
+                                        .sizeIn(
+                                            maxWidth = 180.dp,
+                                            maxHeight = 180.dp
+                                        )
+                                )
+                            }
+                        }
+                    }
+                    SoilMoistureStatus(
+                        status = "Kelembaban",
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    HorizontalDivider(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(CircleShape),
+                        color = MaterialTheme.colorScheme.onBackground,
+                        thickness = 2.dp
+                    )
+                    CompositionLocalProvider(
+                        LocalTextStyle provides MaterialTheme.typography.bodyExtraSmall.copy(
+                            color = Gray,
+                            fontStyle = FontStyle.Italic
+                        )
+                    ) {
+                        Text("Batas Minimum: ${minPercentage?.toInt() ?: 0}%")
+                        Text(
+                            "Kelembaban: ${
+                                if (latest != null) "${String.format(
+                                    locale = null,
+                                    format = "%.1f",
+                                    latest.moisturePercent
+                                )}%" 
+                                else "Mencari..."
+                            }"
+                        )
+                    }
+                }
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.End)
+                        .clickable(
+                            indication = null,
+                            interactionSource = null,
+                            onClick = onMinSettingClick
+                        ),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    CompositionLocalProvider(
+                        LocalContentColor provides MaterialTheme.colorScheme.secondary
+                    ) {
+                        val textStyle = MaterialTheme.typography.bodySmall.copy(
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        Text(
+                            text = "Atur batas minimum",
+                            style = textStyle
+                        )
+                        Icon(
+                            painter = painterResource(IrrigoIcon.arrowRightLine),
+                            contentDescription = null,
+                            modifier = Modifier.size((textStyle.fontSize.value * 1.5f).dp)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SoilMoistureIndicator(
+    min: Float?, // 0 - 100
+    value: Float?, // 0 - 100
+    modifier: Modifier = Modifier
+) {
+    var startAnimate by remember { mutableStateOf(false) }
+    val minAnimatedValue by animateFloatAsState(
+        if (startAnimate && min != null) min / 100f else 0f
+    )
+    val animatedValue by animateFloatAsState(
+        if (startAnimate && value != null) value / 100f else 0f
+    )
+    val onBackground = MaterialTheme.colorScheme.onBackground
+    val primary = MaterialTheme.colorScheme.primary
+
+    LaunchedEffect(Unit) {
+        delay(500)
+        startAnimate = true
+    }
+
+    Box(
+        modifier = modifier.aspectRatio(1f)
+    ) {
+        if (value != null && min != null) Canvas(Modifier.fillMaxSize()) {
+            val style = Stroke(
+                width = 8.dp.toPx()
+            )
+
+            drawArc(
+                color = onBackground,
+                startAngle = 0f,
+                sweepAngle = 360f,
+                useCenter = false,
+                style = style
+            )
+            drawArc(
+                color = if (value < min) Red else primary,
+                startAngle = -90f,
+                sweepAngle = 360 * if (value < min) minAnimatedValue else animatedValue,
+                useCenter = false,
+                style = style
+            )
+            drawArc(
+                color = if (value < min) primary else Red,
+                startAngle = -90f,
+                sweepAngle = 360f * if (value < min) animatedValue else minAnimatedValue,
+                useCenter = false,
+                style = style
+            )
+        }
+        Text(
+            text = if (value != null) "${String.format(
+                locale = null,
+                format = "%.1f",
+                value
+            )}%" else "Mencari data...",
+            modifier = Modifier.align(Alignment.Center),
+            style = LocalTextStyle.current.copy(
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
+        )
+    }
+}
+
+@Composable
+private fun SoilMoistureStatus(
+    status: String,
+    color: Color,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        val textStyle = MaterialTheme.typography.bodySmall
+
+        Box(
+            modifier = Modifier
+                .size(textStyle.fontSize.value.dp)
+                .clip(CircleShape)
+                .background(color)
+        )
+        Text(
+            text = status,
+            style = textStyle
+        )
     }
 }

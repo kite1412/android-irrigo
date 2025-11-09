@@ -36,7 +36,9 @@ fun IrrigoNavHost(
             startDestination = DashboardRoute,
             modifier = Modifier.fillMaxSize()
         ) {
-            dashboardScreen()
+            dashboardScreen(
+                onSoilMoistureSettingClick = {}
+            )
         }
     }
 }

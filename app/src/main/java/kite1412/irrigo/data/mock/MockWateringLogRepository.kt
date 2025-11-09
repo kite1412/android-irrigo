@@ -1,6 +1,7 @@
 package kite1412.irrigo.data.mock
 
-import kite1412.irrigo.domain.WateringLogRepository
+import kite1412.irrigo.domain.WateringRepository
+import kite1412.irrigo.model.WateringConfig
 import kite1412.irrigo.model.WateringLog
 import kite1412.irrigo.util.now
 import kotlinx.coroutines.delay
@@ -9,7 +10,7 @@ import kotlinx.coroutines.flow.channelFlow
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.days
 
-class MockWateringLogRepository @Inject constructor() : WateringLogRepository {
+class MockWateringLogRepository @Inject constructor() : WateringRepository {
     override fun getWateringLogsFlow(deviceId: Int): Flow<List<WateringLog>> =
         channelFlow {
             var id = 0
@@ -35,4 +36,10 @@ class MockWateringLogRepository @Inject constructor() : WateringLogRepository {
                 trySend(list)
             }
         }
+
+    override suspend fun getConfig(): WateringConfig = WateringConfig(
+        minSoilMoisturePercent = 40f,
+        durationMs = 2000f,
+        automated = true
+    )
 }

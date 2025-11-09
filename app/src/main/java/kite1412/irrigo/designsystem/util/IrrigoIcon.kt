@@ -13,4 +13,6 @@ object IrrigoIcon {
     val arrowRight = R.drawable.arrow_right
     val waterSpray = R.drawable.water_spray
     val timerReset = R.drawable.time_reset
+    val about = R.drawable.about
+    val arrowRightLine = R.drawable.arrow_right_line
 }

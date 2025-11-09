@@ -74,3 +74,14 @@ val Typography = Typography(
         )
     }
 )
+
+val Typography.bodyExtraSmall: TextStyle
+    get() = with(10) {
+        TextStyle(
+            fontFamily = Poppins,
+            fontWeight = FontWeight.Normal,
+            fontSize = this.sp,
+            lineHeight = (this * LINE_HEIGHT_MULTIPLIER).sp,
+            letterSpacing = 0.3.sp
+        )
+    }

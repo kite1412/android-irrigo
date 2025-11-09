@@ -8,8 +8,12 @@ import kotlinx.serialization.Serializable
 @Serializable
 data object DashboardRoute
 
-fun NavGraphBuilder.dashboardScreen() {
+fun NavGraphBuilder.dashboardScreen(
+    onSoilMoistureSettingClick: () -> Unit
+) {
     composable<DashboardRoute> {
-        DashboardScreen()
+        DashboardScreen(
+            onSoilMoistureSettingClick = onSoilMoistureSettingClick
+        )
     }
 }
