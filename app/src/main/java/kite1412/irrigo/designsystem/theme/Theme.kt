@@ -15,7 +15,7 @@ import androidx.compose.ui.platform.LocalContext
 
 private val LightColorScheme = lightColorScheme(
     primary = PastelGreen,
-    secondary = LightBlue,
+    secondary = PastelBlue,
     background = BoneWhite,
     onBackground = Charcoal,
     onPrimary = Color.White

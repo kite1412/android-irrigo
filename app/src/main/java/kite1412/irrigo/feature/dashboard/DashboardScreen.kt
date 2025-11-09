@@ -69,7 +69,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kite1412.irrigo.designsystem.theme.DarkGray
 import kite1412.irrigo.designsystem.theme.DarkPastelBlue
 import kite1412.irrigo.designsystem.theme.Gray
-import kite1412.irrigo.designsystem.theme.PastelBlue
+import kite1412.irrigo.designsystem.theme.LightPastelBlue
 import kite1412.irrigo.designsystem.theme.Red
 import kite1412.irrigo.designsystem.theme.bodyExtraSmall
 import kite1412.irrigo.designsystem.util.IrrigoIcon
@@ -330,7 +330,7 @@ private fun WaterCapacity(
 ) {
     val noData = latest == null || waterContainer == null
     val background by animateColorAsState(
-        targetValue = if (noData || latest.currentHeightCm == 0.0) DarkGray else PastelBlue
+        targetValue = if (noData || latest.currentHeightCm == 0.0) DarkGray else LightPastelBlue
     )
     var containerHeightPx by remember { mutableFloatStateOf(0f) }
     val progressHeight by animateFloatAsState(

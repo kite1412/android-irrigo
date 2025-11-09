@@ -5,8 +5,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hasRoute
+import androidx.navigation.navOptions
 import kite1412.irrigo.designsystem.util.IrrigoIcon
 import kite1412.irrigo.feature.dashboard.navigation.DashboardRoute
+import kite1412.irrigo.feature.logs.navigation.LogsRoute
 import kite1412.irrigo.util.Destination
 
 @Composable
@@ -20,12 +22,12 @@ class IrrigoAppState(
 ) {
     val destinations = listOf(
         Destination(
-            route = DashboardRoute::class,
+            route = DashboardRoute,
             iconId = IrrigoIcon.chart,
             name = "Dashboard"
         ),
         Destination(
-            route = TempRoute::class,
+            route = LogsRoute,
             iconId = IrrigoIcon.clipboard,
             name = "Log"
         ),
@@ -45,13 +47,18 @@ class IrrigoAppState(
                 currentBackStackEntry
                     .value
                     ?.destination
-                    ?.hasRoute(it.route) == true
+                    ?.hasRoute(it.route::class) == true
             }
         }
 
     // TODO implement logic
     fun navigateTo(destination: Destination) {
-
+        navController.navigate(
+            route = destination.route,
+            navOptions = navOptions {
+                launchSingleTop = true
+            }
+        )
     }
 }
 
