@@ -499,9 +499,10 @@ private fun LatestWateringLogs(
                 )
             )
         } else Text(
-            text = "Mencari log penyiraman",
+            text = "Mencari log penyiraman...",
             style = MaterialTheme.typography.bodySmall.copy(
-                fontStyle = FontStyle.Italic
+                fontStyle = FontStyle.Italic,
+                textAlign = TextAlign.Center
             )
         )
     }

@@ -1,9 +1,19 @@
 package kite1412.irrigo.feature.logs
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -23,49 +33,76 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import kite1412.irrigo.designsystem.theme.LightPastelBlue
 import kite1412.irrigo.designsystem.theme.PastelBlue
-import kite1412.irrigo.designsystem.util.IrrigoIcon
+import kite1412.irrigo.feature.logs.util.LogsGroupType
 
 @Composable
-fun LogsScreen(modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+fun LogsScreen(
+    modifier: Modifier = Modifier,
+    viewModel: LogsViewModel = hiltViewModel()
+) {
+    val selectedLogsGroup = viewModel.selectedLogsGroup
+
+    BackHandler(
+        enabled = selectedLogsGroup != null
     ) {
-        Text(
-            text = "Log / Catatan",
-            style = MaterialTheme.typography.bodyLarge.copy(
-                fontWeight = FontWeight.Bold
-            )
-        )
-        Column(
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            LogsGroup(
-                name = "Kelembaban Tanah",
-                iconId = IrrigoIcon.plantWater,
-                background = MaterialTheme.colorScheme.primary
-            )
-            LogsGroup(
-                name = "Penyiraman",
-                iconId = IrrigoIcon.waterSpray,
-                background = LightPastelBlue
-            )
-            LogsGroup(
-                name = "Kapasitas Air",
-                iconId = IrrigoIcon.waterDrop,
-                background = PastelBlue
-            )
+        viewModel.updateSelectedLogsGroup(null)
+    }
+    AnimatedContent(
+        targetState = selectedLogsGroup,
+        transitionSpec = {
+            if (targetState == null)
+                slideInHorizontally { -it } + fadeIn() togetherWith
+                        slideOutHorizontally { it } + fadeOut()
+            else slideInHorizontally { it } + fadeIn() togetherWith
+                    slideOutHorizontally { -it } + fadeOut()
+        }
+    ) {
+        when (it) {
+            null -> Column(
+                modifier = modifier,
+                verticalArrangement = Arrangement.spacedBy(24.dp)
+            ) {
+                Text(
+                    text = "Log / Catatan",
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    LogsGroup(
+                        type = LogsGroupType.SOIL_MOISTURE,
+                        background = MaterialTheme.colorScheme.primary,
+                        onClick = viewModel::updateSelectedLogsGroup
+                    )
+                    LogsGroup(
+                        type = LogsGroupType.WATERING,
+                        background = LightPastelBlue,
+                        onClick = viewModel::updateSelectedLogsGroup
+                    )
+                    LogsGroup(
+                        type = LogsGroupType.WATER_CAPACITY,
+                        background = PastelBlue,
+                        onClick = viewModel::updateSelectedLogsGroup
+                    )
+                }
+            }
+            else -> Box(Modifier.fillMaxSize()) {
+                Text(selectedLogsGroup?.string ?: "")
+            }
         }
     }
 }
 
 @Composable
 private fun LogsGroup(
-    name: String,
-    iconId: Int,
+    type: LogsGroupType,
     background: Color,
+    onClick: (LogsGroupType) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -76,6 +113,10 @@ private fun LogsGroup(
                 shape = RoundedCornerShape(16.dp)
             )
             .background(background)
+            .clickable(
+                indication = null,
+                interactionSource = null
+            ) { onClick(type) }
             .padding(
                 vertical = 16.dp,
                 horizontal = 24.dp
@@ -92,12 +133,12 @@ private fun LogsGroup(
             )
 
             Text(
-                text = name,
+                text = type.string,
                 style = textStyle
             )
             Icon(
-                painter = painterResource(iconId),
-                contentDescription = name,
+                painter = painterResource(type.iconId),
+                contentDescription = type.name,
                 modifier = Modifier.size((textStyle.fontSize.value * 2f).dp)
             )
         }
