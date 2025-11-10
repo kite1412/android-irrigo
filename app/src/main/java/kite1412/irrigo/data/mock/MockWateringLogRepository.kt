@@ -39,7 +39,7 @@ class MockWateringLogRepository @Inject constructor() : WateringRepository {
 
     override suspend fun getConfig(): WateringConfig = WateringConfig(
         minSoilMoisturePercent = 40f,
-        durationMs = 2000f,
+        durationMs = 2000,
         automated = true
     )
 }

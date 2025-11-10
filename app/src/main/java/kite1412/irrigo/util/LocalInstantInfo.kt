@@ -1,4 +1,4 @@
-package kite1412.irrigo.feature.dashboard.util
+package kite1412.irrigo.util
 
 data class LocalInstantInfo(
     val day: String,

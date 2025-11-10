@@ -5,5 +5,5 @@ import kotlinx.coroutines.flow.Flow
 
 interface SoilMoistureLogRepository {
     fun getLatestSoilMoistureLog(deviceId: Int): Flow<SoilMoistureLog>
-    fun getSoilMoistureLogs(deviceId: Int): List<SoilMoistureLog>
+    suspend fun getSoilMoistureLogs(deviceId: Int): List<SoilMoistureLog>
 }

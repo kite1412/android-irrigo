@@ -73,13 +73,13 @@ import kite1412.irrigo.designsystem.theme.LightPastelBlue
 import kite1412.irrigo.designsystem.theme.Red
 import kite1412.irrigo.designsystem.theme.bodyExtraSmall
 import kite1412.irrigo.designsystem.util.IrrigoIcon
-import kite1412.irrigo.feature.dashboard.util.getLocalInstantInfo
 import kite1412.irrigo.feature.dashboard.util.getWaterLevelPercentString
 import kite1412.irrigo.model.Device
 import kite1412.irrigo.model.SoilMoistureLog
 import kite1412.irrigo.model.WaterCapacityLog
 import kite1412.irrigo.model.WaterContainer
 import kite1412.irrigo.model.WateringLog
+import kite1412.irrigo.util.getLocalInstantInfo
 import kotlinx.coroutines.delay
 import kotlin.math.max
 

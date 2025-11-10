@@ -29,8 +29,8 @@ class MockSoilMoistureLogRepository @Inject constructor() : SoilMoistureLogRepos
             }
         }
 
-    override fun getSoilMoistureLogs(deviceId: Int): List<SoilMoistureLog> =
-        List(10) { index ->
+    override suspend fun getSoilMoistureLogs(deviceId: Int): List<SoilMoistureLog> =
+        List(50) { index ->
             SoilMoistureLog(
                 id = index + 1,
                 device = MockData.devices.first(),
