@@ -57,17 +57,17 @@ class DashboardViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            val device = deviceRepository.getDeviceById(
-                id = context
-                    .getPreference(IntPreferencesKey.SELECTED_DEVICE_ID) ?: 1
-            )
+            val devices = deviceRepository.getDevices()
+            this@DashboardViewModel.devices.addAll(devices)
+            val device = devices.firstOrNull {
+                it.id == (context
+                    .getPreference(IntPreferencesKey.SELECTED_DEVICE_ID) ?: 1)
+            }
             wateringConfig = wateringRepository.getConfig()
             if (device == null) {
                 _uiEvent.emit(DashboardUiEvent.ShowSnackbar("Device not found"))
                 return@launch
             } else updateDeviceInfo(newDevice = device)
-
-            devices.addAll(deviceRepository.getDevices())
         }
     }
 

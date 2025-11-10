@@ -54,6 +54,7 @@ import kite1412.irrigo.designsystem.theme.PastelBlue
 import kite1412.irrigo.designsystem.util.IrrigoIcon
 import kite1412.irrigo.feature.logs.util.LogsGroupType
 import kite1412.irrigo.model.SoilMoistureLog
+import kite1412.irrigo.ui.component.DeviceSelect
 import kite1412.irrigo.util.getLocalInstantInfo
 import kite1412.irrigo.util.now
 import kite1412.irrigo.util.toLocalDateTime
@@ -69,13 +70,14 @@ fun LogsScreen(
     val fetchingLogs = viewModel.fetchingLogs
     val selectedDate = viewModel.selectedDate
     val availableDates = viewModel.availableDates
+    val device = viewModel.device
 
     BackHandler(
         enabled = selectedLogsGroup != null
     ) {
         viewModel.updateSelectedLogsGroup(null)
     }
-    AnimatedContent(
+    if (device != null) AnimatedContent(
         targetState = selectedLogsGroup,
         transitionSpec = {
             if (targetState == null)
@@ -119,18 +121,27 @@ fun LogsScreen(
             style = LocalTextStyle.current.copy(
                 fontStyle = FontStyle.Italic
             )
-        ) else when (it) {
-            LogsGroupType.SOIL_MOISTURE -> SoilMoistureLogs(
-                logs = soilMoistureLogs
-                    .filter { l ->
-                        l.timestamp.toLocalDateTime().date == selectedDate?.toLocalDateTime()?.date
-                    },
-                selectedDate = selectedDate ?: now(),
-                availableDates = availableDates,
-                onDateChange = viewModel::updateSelectedDate
+        ) else Column(
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            DeviceSelect(
+                selectedDevice = device,
+                devices = viewModel.devices,
+                onDeviceChange = viewModel::onDeviceChange
             )
-            else -> Box(Modifier.fillMaxSize()) {
-                Text(selectedLogsGroup?.string ?: "")
+            when (it) {
+                LogsGroupType.SOIL_MOISTURE -> SoilMoistureLogs(
+                    logs = soilMoistureLogs
+                        .filter { l ->
+                            l.timestamp.toLocalDateTime().date == selectedDate?.toLocalDateTime()?.date
+                        },
+                    selectedDate = selectedDate ?: now(),
+                    availableDates = availableDates,
+                    onDateChange = viewModel::updateSelectedDate
+                )
+                else -> Box(Modifier.fillMaxSize()) {
+                    Text(selectedLogsGroup?.string ?: "")
+                }
             }
         }
     }

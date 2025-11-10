@@ -9,12 +9,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kite1412.irrigo.domain.DeviceRepository
 import kite1412.irrigo.domain.SoilMoistureLogRepository
 import kite1412.irrigo.feature.logs.util.LogsGroupType
+import kite1412.irrigo.model.Device
 import kite1412.irrigo.model.SoilMoistureLog
 import kite1412.irrigo.util.IntPreferencesKey
 import kite1412.irrigo.util.getPreference
 import kite1412.irrigo.util.toLocalDateTime
+import kite1412.irrigo.util.updatePreferences
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.time.Instant
@@ -22,16 +25,31 @@ import kotlin.time.Instant
 @HiltViewModel
 class LogsViewModel @Inject constructor(
     @param:ApplicationContext private val context: Context,
-    private val soilMoistureLogRepository: SoilMoistureLogRepository
+    private val soilMoistureLogRepository: SoilMoistureLogRepository,
+    private val deviceRepository: DeviceRepository
 ) : ViewModel() {
+    var device by mutableStateOf<Device?>(null)
+        private set
     var selectedLogsGroup by mutableStateOf<LogsGroupType?>(null)
         private set
     var fetchingLogs by mutableStateOf(false)
         private set
-    val soilMoistureLogs = mutableStateListOf<SoilMoistureLog>()
     var selectedDate by mutableStateOf<Instant?>(null)
         private set
+    val soilMoistureLogs = mutableStateListOf<SoilMoistureLog>()
     val availableDates = mutableStateListOf<Instant>()
+    val devices = mutableStateListOf<Device>()
+
+    init {
+        viewModelScope.launch {
+            val devices = deviceRepository.getDevices()
+            this@LogsViewModel.devices.addAll(devices)
+            device = devices.firstOrNull {
+                it.id == (context
+                    .getPreference(IntPreferencesKey.SELECTED_DEVICE_ID) ?: 1)
+            }
+        }
+    }
 
     private fun List<Instant>.distinctByDate() = distinctBy {
         it.toLocalDateTime().date
@@ -45,9 +63,7 @@ class LogsViewModel @Inject constructor(
                     LogsGroupType.SOIL_MOISTURE -> {
                         val logs = soilMoistureLogRepository
                             .getSoilMoistureLogs(
-                                deviceId = context.getPreference(
-                                    key = IntPreferencesKey.SELECTED_DEVICE_ID
-                                ) ?: throw IllegalStateException("No device selected")
+                                deviceId = device?.id ?: throw IllegalStateException("No device selected")
                             )
                             .sortedByDescending { it.timestamp }
 
@@ -79,5 +95,16 @@ class LogsViewModel @Inject constructor(
 
     fun updateSelectedDate(date: Instant) {
         selectedDate = date
+    }
+
+    fun onDeviceChange(device: Device) {
+        this.device = device
+        viewModelScope.launch {
+            context.updatePreferences(
+                key = IntPreferencesKey.SELECTED_DEVICE_ID,
+                value = device.id
+            )
+            selectedLogsGroup?.let(::tryFetchLogs)
+        }
     }
 }
