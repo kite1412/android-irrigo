@@ -7,12 +7,14 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,13 +22,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,12 +48,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import kite1412.irrigo.designsystem.theme.Gray
 import kite1412.irrigo.designsystem.theme.LightPastelBlue
 import kite1412.irrigo.designsystem.theme.PastelBlue
+import kite1412.irrigo.designsystem.util.IrrigoIcon
 import kite1412.irrigo.feature.logs.util.LogsGroupType
 import kite1412.irrigo.model.SoilMoistureLog
 import kite1412.irrigo.util.getLocalInstantInfo
+import kite1412.irrigo.util.now
 import kite1412.irrigo.util.toLocalDateTime
+import kotlin.time.Instant
 
 @Composable
 fun LogsScreen(
@@ -54,7 +67,8 @@ fun LogsScreen(
     val selectedLogsGroup = viewModel.selectedLogsGroup
     val soilMoistureLogs = viewModel.soilMoistureLogs
     val fetchingLogs = viewModel.fetchingLogs
-    val selectedDay = viewModel.selectedDay
+    val selectedDate = viewModel.selectedDate
+    val availableDates = viewModel.availableDates
 
     BackHandler(
         enabled = selectedLogsGroup != null
@@ -107,10 +121,13 @@ fun LogsScreen(
             )
         ) else when (it) {
             LogsGroupType.SOIL_MOISTURE -> SoilMoistureLogs(
-                soilMoistureLogs
-                    .filter {
-                        it.timestamp.toLocalDateTime().date == selectedDay?.toLocalDateTime()?.date
-                    }
+                logs = soilMoistureLogs
+                    .filter { l ->
+                        l.timestamp.toLocalDateTime().date == selectedDate?.toLocalDateTime()?.date
+                    },
+                selectedDate = selectedDate ?: now(),
+                availableDates = availableDates,
+                onDateChange = viewModel::updateSelectedDate
             )
             else -> Box(Modifier.fillMaxSize()) {
                 Text(selectedLogsGroup?.string ?: "")
@@ -169,31 +186,130 @@ private fun LogsGroup(
 @Composable
 private fun SoilMoistureLogs(
     logs: List<SoilMoistureLog>,
+    selectedDate: Instant,
+    availableDates: List<Instant>,
+    onDateChange: (Instant) -> Unit,
     modifier: Modifier = Modifier
-) = Table(
-    columns = listOf("Kelembaban Tanah", "Waktu"),
-    rows = logs.map {
-        listOf(
-            String.format(
-                locale = null,
-                format = "%.1f",
-                it.moisturePercent
-            ),
-            it.timestamp.getLocalInstantInfo(
-                dateFormat = "d MM yyyy",
-                timeFormat = "HH:mm"
-            ).time
+) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalAlignment = Alignment.End
+    ) {
+        DateSelect(
+            selectedDate = selectedDate,
+            availableDates = availableDates,
+            onDateChange = onDateChange
         )
-    },
-    keys = { logs.getOrNull(it)?.id ?: it },
-    modifier = modifier,
-    rowStyles = MaterialTheme.typography.bodySmall.run {
-        listOf(
-            copy(fontWeight = FontWeight.Bold),
-            this
+        Table(
+            columns = listOf("Kelembaban Tanah", "Waktu"),
+            rows = logs.map {
+                listOf(
+                    "${
+                        String.format(
+                            locale = null,
+                            format = "%.1f",
+                            it.moisturePercent
+                        )
+                    } %",
+                    it.timestamp.getLocalInstantInfo(
+                        timeFormat = "HH:mm:ss"
+                    ).time
+                )
+            },
+            keys = { logs.getOrNull(it)?.id ?: it },
+            rowStyles = MaterialTheme.typography.bodySmall.run {
+                listOf(
+                    copy(fontWeight = FontWeight.Bold),
+                    this
+                )
+            }
         )
     }
-)
+}
+
+@Composable
+private fun DateSelect(
+    selectedDate: Instant,
+    availableDates: List<Instant>,
+    onDateChange: (Instant) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var showOptions by remember { mutableStateOf(false) }
+
+    Box(
+        modifier = modifier
+    ) {
+        Row(
+            modifier = Modifier
+                .clickable(
+                    indication = null,
+                    interactionSource = null
+                ) { showOptions = !showOptions },
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            CompositionLocalProvider(
+                LocalContentColor provides MaterialTheme.colorScheme.primary
+            ) {
+                Text(
+                    text = selectedDate.getLocalInstantInfo(
+                        dateFormat = "d MMM yyyy"
+                    ).day,
+                    style = LocalTextStyle.current.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontStyle = FontStyle.Italic
+                    )
+                )
+                Icon(
+                    painter = painterResource(IrrigoIcon.chevronDown),
+                    contentDescription = "select date"
+                )
+            }
+        }
+        DropdownMenu(
+            expanded = showOptions,
+            onDismissRequest = { showOptions = false },
+            containerColor = MaterialTheme.colorScheme.background,
+            border = BorderStroke(
+                width = 2.dp,
+                color = MaterialTheme.colorScheme.primary
+            ),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            val style = LocalTextStyle.current.copy(
+                fontWeight = FontWeight.Bold
+            )
+
+            availableDates.forEach {
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            text = it.getLocalInstantInfo(
+                                dateFormat = "d MMM yyyy"
+                            ).day,
+                            style = style
+                        )
+                    },
+                    onClick = {
+                        onDateChange(it)
+                        showOptions = false
+                    },
+                    contentPadding = PaddingValues(
+                        horizontal = 16.dp,
+                        vertical = 8.dp
+                    ),
+                    enabled = selectedDate
+                        .toLocalDateTime()
+                        .date != it.toLocalDateTime().date,
+                    colors = MenuDefaults.itemColors(
+                        textColor = MaterialTheme.colorScheme.primary,
+                        disabledTextColor = Gray
+                    )
+                )
+            }
+        }
+    }
+}
 
 @Composable
 private fun Table(

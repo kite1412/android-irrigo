@@ -14,6 +14,7 @@ import kite1412.irrigo.feature.logs.util.LogsGroupType
 import kite1412.irrigo.model.SoilMoistureLog
 import kite1412.irrigo.util.IntPreferencesKey
 import kite1412.irrigo.util.getPreference
+import kite1412.irrigo.util.toLocalDateTime
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.time.Instant
@@ -28,17 +29,15 @@ class LogsViewModel @Inject constructor(
     var fetchingLogs by mutableStateOf(false)
         private set
     val soilMoistureLogs = mutableStateListOf<SoilMoistureLog>()
-    var selectedDay by mutableStateOf<Instant?>(null)
+    var selectedDate by mutableStateOf<Instant?>(null)
+        private set
+    val availableDates = mutableStateListOf<Instant>()
 
-
-    fun updateSelectedLogsGroup(type: LogsGroupType?) {
-        selectedLogsGroup = type
-        type?.let(::tryFetchLogs) ?: {
-            selectedDay = null
-        }
+    private fun List<Instant>.distinctByDate() = distinctBy {
+        it.toLocalDateTime().date
     }
 
-    fun tryFetchLogs(type: LogsGroupType) {
+    private fun tryFetchLogs(type: LogsGroupType) {
         viewModelScope.launch {
             try {
                 fetchingLogs = true
@@ -53,9 +52,14 @@ class LogsViewModel @Inject constructor(
                             .sortedByDescending { it.timestamp }
 
                         logs.firstOrNull()?.let {
-                            selectedDay = it.timestamp
+                            selectedDate = it.timestamp
                         }
                         soilMoistureLogs.clear()
+                        availableDates.clear()
+                        availableDates.addAll(
+                            logs.map { it.timestamp }
+                                .distinctByDate()
+                        )
                         soilMoistureLogs.addAll(logs)
                     }
                     else -> Unit
@@ -64,5 +68,16 @@ class LogsViewModel @Inject constructor(
                 fetchingLogs = false
             }
         }
+    }
+
+    fun updateSelectedLogsGroup(type: LogsGroupType?) {
+        selectedLogsGroup = type
+        type?.let(::tryFetchLogs) ?: {
+            selectedDate = null
+        }
+    }
+
+    fun updateSelectedDate(date: Instant) {
+        selectedDate = date
     }
 }
