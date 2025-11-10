@@ -14,12 +14,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kite1412.irrigo.designsystem.theme.IrrigoTheme
+import kite1412.irrigo.ui.compositionlocal.LocalAppBarUpdater
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -27,19 +30,26 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
+            val viewModel: IrrigoViewModel = hiltViewModel()
+
             IrrigoTheme { innerPadding ->
                 SplashScreen {
                     Box(
                         modifier = Modifier.fillMaxSize()
                     ) {
-                        IrrigoNavHost(
-                            modifier = Modifier
-                                .padding(innerPadding)
-                                .padding(
-                                    vertical = 24.dp,
-                                    horizontal = 16.dp
-                                )
-                        )
+                        CompositionLocalProvider(
+                            LocalAppBarUpdater provides viewModel.appBarUpdater
+                        ) {
+                            IrrigoNavHost(
+                                modifier = Modifier
+                                    .padding(innerPadding)
+                                    .padding(
+                                        vertical = 24.dp,
+                                        horizontal = 16.dp
+                                    ),
+                                appBarSubtitle = viewModel.appBarSubtitle
+                            )
+                        }
                         NavigationBarProtection(
                             modifier = Modifier.align(Alignment.BottomCenter)
                         )

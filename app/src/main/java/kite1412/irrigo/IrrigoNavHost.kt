@@ -22,7 +22,8 @@ import kite1412.irrigo.util.Destination
 fun IrrigoNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
-    appState: IrrigoAppState = rememberIrrigoAppState(navController)
+    appState: IrrigoAppState = rememberIrrigoAppState(navController),
+    appBarSubtitle: String? = null
 ) {
     val currentDestination = appState.currentDestination
 
@@ -30,7 +31,8 @@ fun IrrigoNavHost(
         selectedDestination = currentDestination,
         destinations = appState.destinations,
         onDestinationSelected = appState::navigateTo,
-        modifier = modifier
+        modifier = modifier,
+        appBarSubtitle = appBarSubtitle
     ) {
         NavHost(
             navController = navController,
@@ -51,6 +53,7 @@ private fun Scaffold(
     destinations: List<Destination>,
     onDestinationSelected: (Destination) -> Unit,
     modifier: Modifier = Modifier,
+    appBarSubtitle: String? = null,
     content: @Composable () -> Unit
 ) {
     Box(
@@ -61,7 +64,8 @@ private fun Scaffold(
             verticalArrangement = Arrangement.spacedBy(32.dp)
         ) {
             IrrigoAppBar(
-                title = selectedDestination?.name ?: ""
+                title = selectedDestination?.name ?: "",
+                subtitle = appBarSubtitle
             )
             content()
         }

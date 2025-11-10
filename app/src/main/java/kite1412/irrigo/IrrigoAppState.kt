@@ -51,12 +51,12 @@ class IrrigoAppState(
             }
         }
 
-    // TODO implement logic
     fun navigateTo(destination: Destination) {
         navController.navigate(
             route = destination.route,
             navOptions = navOptions {
                 launchSingleTop = true
+                popUpTo(DashboardRoute)
             }
         )
     }

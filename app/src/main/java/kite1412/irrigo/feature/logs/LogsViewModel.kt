@@ -90,7 +90,7 @@ class LogsViewModel @Inject constructor(
         selectedLogsGroup = type
         type?.let(::tryFetchLogs) ?: {
             selectedDate = null
-        }
+        }()
     }
 
     fun updateSelectedDate(date: Instant) {

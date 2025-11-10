@@ -140,6 +140,7 @@ fun DeviceSelect(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
+                            expanded = false
                             onDeviceChange(d)
                         }
                 ) {

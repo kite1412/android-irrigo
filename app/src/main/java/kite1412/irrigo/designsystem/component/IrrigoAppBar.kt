@@ -1,6 +1,7 @@
 package kite1412.irrigo.designsystem.component
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
@@ -26,8 +28,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kite1412.irrigo.designsystem.theme.IrrigoTheme
 import kite1412.irrigo.designsystem.util.IrrigoIcon
@@ -36,7 +39,8 @@ import kotlinx.coroutines.delay
 @Composable
 fun IrrigoAppBar(
     title: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    subtitle: String? = null
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -44,6 +48,7 @@ fun IrrigoAppBar(
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         val titleSmall = MaterialTheme.typography.titleSmall
+        val dividerHeight = titleSmall.fontSize.value.dp
 
         Icon(
             painter = painterResource(IrrigoIcon.logoFull),
@@ -51,13 +56,7 @@ fun IrrigoAppBar(
             modifier = Modifier.height((titleSmall.fontSize.value * 2).dp),
             tint = Color.Unspecified
         )
-        VerticalDivider(
-            modifier = Modifier
-                .height(titleSmall.fontSize.value.dp)
-                .clip(CircleShape),
-            thickness = 2.dp,
-            color = MaterialTheme.colorScheme.onBackground
-        )
+        Divider(dividerHeight)
         AnimatedContent(
             targetState = title,
             transitionSpec = {
@@ -73,7 +72,38 @@ fun IrrigoAppBar(
                 maxLines = 1
             )
         }
+        AnimatedVisibility(
+            visible = subtitle != null
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Divider(dividerHeight)
+                Text(
+                    text = subtitle ?: "",
+                    style = LocalTextStyle.current.copy(
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+            }
+        }
     }
+}
+
+@Composable
+private fun Divider(
+    height: Dp,
+    modifier: Modifier = Modifier
+) {
+    VerticalDivider(
+        modifier = modifier
+            .height(height)
+            .clip(CircleShape),
+        thickness = 2.dp,
+        color = MaterialTheme.colorScheme.onBackground
+    )
 }
 
 @Preview

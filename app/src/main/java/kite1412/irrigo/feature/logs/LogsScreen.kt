@@ -32,6 +32,7 @@ import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,6 +49,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import kite1412.irrigo.designsystem.theme.Gray
 import kite1412.irrigo.designsystem.theme.LightPastelBlue
 import kite1412.irrigo.designsystem.theme.PastelBlue
@@ -55,6 +59,7 @@ import kite1412.irrigo.designsystem.util.IrrigoIcon
 import kite1412.irrigo.feature.logs.util.LogsGroupType
 import kite1412.irrigo.model.SoilMoistureLog
 import kite1412.irrigo.ui.component.DeviceSelect
+import kite1412.irrigo.ui.compositionlocal.LocalAppBarUpdater
 import kite1412.irrigo.util.getLocalInstantInfo
 import kite1412.irrigo.util.now
 import kite1412.irrigo.util.toLocalDateTime
@@ -71,11 +76,25 @@ fun LogsScreen(
     val selectedDate = viewModel.selectedDate
     val availableDates = viewModel.availableDates
     val device = viewModel.device
+    val appBarUpdater = LocalAppBarUpdater.current
+    val lifecycleOwner = LocalLifecycleOwner.current
 
     BackHandler(
         enabled = selectedLogsGroup != null
     ) {
         viewModel.updateSelectedLogsGroup(null)
+        appBarUpdater.dismissSubtitle()
+    }
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_STOP) {
+                appBarUpdater.dismissSubtitle()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
     }
     if (device != null) AnimatedContent(
         targetState = selectedLogsGroup,
@@ -103,17 +122,26 @@ fun LogsScreen(
                 LogsGroup(
                     type = LogsGroupType.SOIL_MOISTURE,
                     background = MaterialTheme.colorScheme.primary,
-                    onClick = viewModel::updateSelectedLogsGroup
+                    onClick = {
+                        viewModel.updateSelectedLogsGroup(it)
+                        appBarUpdater.setSubtitle("Kelembaban Tanah")
+                    }
                 )
                 LogsGroup(
                     type = LogsGroupType.WATERING,
                     background = LightPastelBlue,
-                    onClick = viewModel::updateSelectedLogsGroup
+                    onClick = {
+                        viewModel.updateSelectedLogsGroup(it)
+                        appBarUpdater.setSubtitle("Penyiraman")
+                    }
                 )
                 LogsGroup(
                     type = LogsGroupType.WATER_CAPACITY,
                     background = PastelBlue,
-                    onClick = viewModel::updateSelectedLogsGroup
+                    onClick = {
+                        viewModel.updateSelectedLogsGroup(it)
+                        appBarUpdater.setSubtitle("Kapasitas Air")
+                    }
                 )
             }
         } else if (fetchingLogs) Text(
