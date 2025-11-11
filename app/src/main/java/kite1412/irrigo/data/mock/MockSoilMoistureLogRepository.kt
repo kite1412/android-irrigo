@@ -18,14 +18,14 @@ class MockSoilMoistureLogRepository @Inject constructor() : SoilMoistureLogRepos
 
             while (isActive) {
                 val latestLog = SoilMoistureLog(
-                    id = ++id,
+                    id = --id,
                     device = MockData.devices.first(),
                     moisturePercent = (30 until 100).random() + Random.nextDouble(0.0, 1.0).toFloat(),
                     timestamp = now()
                 )
 
                 trySend(latestLog)
-                delay(2_000)
+                delay(2000L)
             }
         }
 

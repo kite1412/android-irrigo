@@ -13,23 +13,23 @@ import kotlin.time.Duration
 class MockWaterCapacityLogRepository @Inject constructor() : WaterCapacityLogRepository {
     override fun getLatestWaterCapacityLogFlow(deviceId: Int): Flow<WaterCapacityLog> = channelFlow {
         val waterContainer = MockData.waterContainer
+        var id = 0
 
         while (true) {
-            delay(500L)
-
             val random = Random.nextDouble(
                 from = 0.7,
                 until = 1.0
             )
             trySend(
                 WaterCapacityLog(
-                    id = 1,
+                    id = --id,
                     device = MockData.devices.first(),
                     timestamp = now(),
                     currentHeightCm = waterContainer.heightCm * random,
                     currentLitres = waterContainer.capacityLitres?.times(random)
                 )
             )
+            delay(2000L)
         }
     }
 

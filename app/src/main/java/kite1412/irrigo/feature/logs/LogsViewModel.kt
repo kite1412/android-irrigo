@@ -22,6 +22,7 @@ import kite1412.irrigo.util.IntPreferencesKey
 import kite1412.irrigo.util.getPreference
 import kite1412.irrigo.util.toLocalDateTime
 import kite1412.irrigo.util.updatePreferences
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.time.Instant
@@ -47,6 +48,7 @@ class LogsViewModel @Inject constructor(
     val waterCapacityLogs = mutableStateListOf<WaterCapacityLog>()
     val availableDates = mutableStateListOf<Instant>()
     val devices = mutableStateListOf<Device>()
+    var realtimeJob: Job? = null
 
     init {
         viewModelScope.launch {
@@ -67,13 +69,14 @@ class LogsViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 fetchingLogs = true
+                realtimeJob?.cancel()
+                realtimeJob = null
                 availableDates.clear()
+                val deviceId = device?.id ?: throw IllegalStateException("No device selected")
                 when (type) {
                     LogsGroupType.SOIL_MOISTURE -> {
                         val logs = soilMoistureLogRepository
-                            .getSoilMoistureLogs(
-                                deviceId = device?.id ?: throw IllegalStateException("No device selected")
-                            )
+                            .getSoilMoistureLogs(deviceId)
                             .sortedByDescending { it.timestamp }
 
                         logs.firstOrNull()?.let {
@@ -85,12 +88,17 @@ class LogsViewModel @Inject constructor(
                                 .distinctByDate()
                         )
                         soilMoistureLogs.addAll(logs)
+                        realtimeJob = launch {
+                            soilMoistureLogRepository
+                                .getLatestSoilMoistureLog(deviceId)
+                                .collect {
+                                    soilMoistureLogs.add(0, it)
+                                }
+                        }
                     }
                     LogsGroupType.WATERING -> {
                         val logs = wateringRepository
-                            .getWateringLogs(
-                                deviceId = device?.id ?: throw IllegalStateException("No device selected")
-                            )
+                            .getWateringLogs(deviceId)
                             .sortedByDescending { it.timestamp }
 
                         logs.firstOrNull()?.let {
@@ -102,12 +110,17 @@ class LogsViewModel @Inject constructor(
                                 .distinctByDate()
                         )
                         wateringLogs.addAll(logs)
+                        realtimeJob = launch {
+                            wateringRepository
+                                .getLatestWateringLog(deviceId)
+                                .collect {
+                                    wateringLogs.add(0, it)
+                                }
+                        }
                     }
                     LogsGroupType.WATER_CAPACITY -> {
                         val logs = waterCapacityLogRepository
-                            .getWaterCapacityLogs(
-                                deviceId = device?.id ?: throw java.lang.IllegalStateException("No device selected")
-                            )
+                            .getWaterCapacityLogs(deviceId)
                             .sortedByDescending { it.timestamp }
 
                         logs.firstOrNull()?.let {
@@ -119,6 +132,13 @@ class LogsViewModel @Inject constructor(
                                 .distinctByDate()
                         )
                         waterCapacityLogs.addAll(logs)
+                        realtimeJob = launch {
+                            waterCapacityLogRepository
+                                .getLatestWaterCapacityLogFlow(deviceId)
+                                .collect {
+                                    waterCapacityLogs.add(0, it)
+                                }
+                        }
                     }
                 }
             } finally {

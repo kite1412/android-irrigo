@@ -4,14 +4,31 @@ import kite1412.irrigo.domain.WateringRepository
 import kite1412.irrigo.model.WateringConfig
 import kite1412.irrigo.model.WateringLog
 import kite1412.irrigo.util.now
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.channelFlow
 import javax.inject.Inject
 import kotlin.time.Duration
 
 class MockWateringLogRepository @Inject constructor() : WateringRepository {
-    override fun getLatestWateringLog(): Flow<WateringLog> {
-        TODO("Not yet implemented")
-    }
+    override fun getLatestWateringLog(deviceId: Int): Flow<WateringLog> =
+        channelFlow {
+            var id = 0
+
+            while (true) {
+                trySend(
+                    WateringLog(
+                        id = --id,
+                        device = MockData.devices.first(),
+                        timestamp = now(),
+                        waterVolumeLiters = 1.0,
+                        durationMs = 2000,
+                        manual = id % 2 == 0
+                    )
+                )
+                delay(2000L)
+            }
+        }
 
     override fun getWateringLogs(deviceId: Int): List<WateringLog> =
         List(100) {

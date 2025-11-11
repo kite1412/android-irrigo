@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -34,6 +35,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -568,7 +570,12 @@ private fun Table(
             bottomStart = 16.dp,
             bottomEnd = 16.dp
         )
+        val state = rememberLazyListState()
 
+        LaunchedEffect(rows) {
+            if (state.firstVisibleItemIndex == 1)
+                state.animateScrollToItem(0)
+        }
         LazyColumn(
             modifier = Modifier
                 .border(
@@ -576,7 +583,8 @@ private fun Table(
                     color = onBackground,
                     shape = shape
                 )
-                .clip(shape)
+                .clip(shape),
+            state = state
         ) {
             if (rows.isNotEmpty()) items(
                 count = rows.size,
