@@ -6,7 +6,7 @@ data class WateringLog(
     val id: Int,
     val device: Device,
     val timestamp: Instant,
-    val durationSeconds: Int,
+    val durationMs: Int,
     val waterVolumeLiters: Double,
     val manual: Boolean = false
 )

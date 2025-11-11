@@ -14,6 +14,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.FlowRowScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -58,6 +60,7 @@ import kite1412.irrigo.designsystem.theme.PastelBlue
 import kite1412.irrigo.designsystem.util.IrrigoIcon
 import kite1412.irrigo.feature.logs.util.LogsGroupType
 import kite1412.irrigo.model.SoilMoistureLog
+import kite1412.irrigo.model.WateringLog
 import kite1412.irrigo.ui.component.DeviceSelect
 import kite1412.irrigo.ui.compositionlocal.LocalAppBarUpdater
 import kite1412.irrigo.util.getLocalInstantInfo
@@ -72,6 +75,7 @@ fun LogsScreen(
 ) {
     val selectedLogsGroup = viewModel.selectedLogsGroup
     val soilMoistureLogs = viewModel.soilMoistureLogs
+    val wateringLogs = viewModel.wateringLogs
     val fetchingLogs = viewModel.fetchingLogs
     val selectedDate = viewModel.selectedDate
     val availableDates = viewModel.availableDates
@@ -167,6 +171,15 @@ fun LogsScreen(
                     availableDates = availableDates,
                     onDateChange = viewModel::updateSelectedDate
                 )
+                LogsGroupType.WATERING -> WateringLogs(
+                    logs = wateringLogs
+                        .filter { l ->
+                            l.timestamp.toLocalDateTime().date == selectedDate?.toLocalDateTime()?.date
+                        },
+                    selectedDate = selectedDate ?: now(),
+                    availableDates = availableDates,
+                    onDateChange = viewModel::updateSelectedDate
+                )
                 else -> Box(Modifier.fillMaxSize()) {
                     Text(selectedLogsGroup?.string ?: "")
                 }
@@ -229,40 +242,104 @@ private fun SoilMoistureLogs(
     availableDates: List<Instant>,
     onDateChange: (Instant) -> Unit,
     modifier: Modifier = Modifier
+) = DateFilterableTable(
+    columns = listOf("Kelembaban Tanah", "Waktu"),
+    rows = logs.map {
+        listOf(
+            "${
+                String.format(
+                    locale = null,
+                    format = "%.1f",
+                    it.moisturePercent
+                )
+            } %",
+            it.timestamp.getLocalInstantInfo(
+                timeFormat = "HH:mm:ss"
+            ).time
+        )
+    },
+    keys = { logs.getOrNull(it)?.id ?: it },
+    selectedDate = selectedDate,
+    availableDates = availableDates,
+    onDateChange = onDateChange,
+    modifier = modifier,
+    rowStyles = MaterialTheme.typography.bodySmall.run {
+        listOf(
+            copy(fontWeight = FontWeight.Bold),
+            this
+        )
+    }
+)
+
+@Composable
+private fun WateringLogs(
+    logs: List<WateringLog>,
+    selectedDate: Instant,
+    availableDates: List<Instant>,
+    onDateChange: (Instant) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val normal = MaterialTheme.typography.bodySmall
+    val bold = normal.copy(
+        fontWeight = FontWeight.Bold
+    )
+
+    DateFilterableTable(
+        columns = listOf("Durasi (Detik)", "Jenis", "Volume Air (Liter)", "Waktu"),
+        rows = logs.map {
+            listOf(
+                it.durationMs / 1000f,
+                if (it.manual) "Manual" else "Otomatis",
+                it.waterVolumeLiters,
+                it.timestamp.getLocalInstantInfo(
+                    timeFormat = "HH:mm:ss"
+                ).time
+            )
+        },
+        keys = { logs.getOrNull(it)?.id ?: it },
+        selectedDate = selectedDate,
+        availableDates = availableDates,
+        onDateChange = onDateChange,
+        modifier = modifier,
+        rowStyles = listOf(bold, bold, normal, normal)
+    )
+}
+
+@Composable
+private fun DateFilterableTable(
+    columns: List<String>,
+    rows: List<List<Any>>,
+    keys: (Int) -> Any,
+    selectedDate: Instant,
+    availableDates: List<Instant>,
+    onDateChange: (Instant) -> Unit,
+    modifier: Modifier = Modifier,
+    rowStyles: List<TextStyle> = columns.map {
+        LocalTextStyle.current
+    },
+    controls: (@Composable FlowRowScope.() -> Unit)? = null
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp),
         horizontalAlignment = Alignment.End
     ) {
-        DateSelect(
-            selectedDate = selectedDate,
-            availableDates = availableDates,
-            onDateChange = onDateChange
-        )
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            controls?.invoke(this)
+            DateSelect(
+                selectedDate = selectedDate,
+                availableDates = availableDates,
+                onDateChange = onDateChange
+            )
+        }
         Table(
-            columns = listOf("Kelembaban Tanah", "Waktu"),
-            rows = logs.map {
-                listOf(
-                    "${
-                        String.format(
-                            locale = null,
-                            format = "%.1f",
-                            it.moisturePercent
-                        )
-                    } %",
-                    it.timestamp.getLocalInstantInfo(
-                        timeFormat = "HH:mm:ss"
-                    ).time
-                )
-            },
-            keys = { logs.getOrNull(it)?.id ?: it },
-            rowStyles = MaterialTheme.typography.bodySmall.run {
-                listOf(
-                    copy(fontWeight = FontWeight.Bold),
-                    this
-                )
-            }
+            columns = columns,
+            rows = rows,
+            keys = keys,
+            rowStyles = rowStyles
         )
     }
 }
@@ -379,9 +456,7 @@ private fun Table(
                     )
                 )
                 .background(onBackground)
-                .padding(
-                    vertical = 8.dp
-                ),
+                .padding(8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {

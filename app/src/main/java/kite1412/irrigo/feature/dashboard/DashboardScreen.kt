@@ -81,7 +81,7 @@ fun DashboardScreen(
     val device = viewModel.device
     val latestWaterCapacityLog by viewModel.latestWaterCapacityLog.collectAsStateWithLifecycle(null)
     val waterContainer = viewModel.waterContainer
-    val latestWateringLogs by viewModel.latestWateringLogs.collectAsStateWithLifecycle(null)
+    val latestWateringLogs = viewModel.latestWateringLogs
     val latestSoilMoistureLog by viewModel.latestSoilMoistureLog.collectAsStateWithLifecycle(null)
     val wateringConfig = viewModel.wateringConfig
 

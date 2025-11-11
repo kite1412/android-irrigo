@@ -11,9 +11,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kite1412.irrigo.domain.DeviceRepository
 import kite1412.irrigo.domain.SoilMoistureLogRepository
+import kite1412.irrigo.domain.WateringRepository
 import kite1412.irrigo.feature.logs.util.LogsGroupType
 import kite1412.irrigo.model.Device
 import kite1412.irrigo.model.SoilMoistureLog
+import kite1412.irrigo.model.WateringLog
 import kite1412.irrigo.util.IntPreferencesKey
 import kite1412.irrigo.util.getPreference
 import kite1412.irrigo.util.toLocalDateTime
@@ -26,7 +28,8 @@ import kotlin.time.Instant
 class LogsViewModel @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val soilMoistureLogRepository: SoilMoistureLogRepository,
-    private val deviceRepository: DeviceRepository
+    private val deviceRepository: DeviceRepository,
+    private val wateringRepository: WateringRepository
 ) : ViewModel() {
     var device by mutableStateOf<Device?>(null)
         private set
@@ -37,6 +40,7 @@ class LogsViewModel @Inject constructor(
     var selectedDate by mutableStateOf<Instant?>(null)
         private set
     val soilMoistureLogs = mutableStateListOf<SoilMoistureLog>()
+    val wateringLogs = mutableStateListOf<WateringLog>()
     val availableDates = mutableStateListOf<Instant>()
     val devices = mutableStateListOf<Device>()
 
@@ -77,6 +81,24 @@ class LogsViewModel @Inject constructor(
                                 .distinctByDate()
                         )
                         soilMoistureLogs.addAll(logs)
+                    }
+                    LogsGroupType.WATERING -> {
+                        val logs = wateringRepository
+                            .getWateringLogs(
+                                deviceId = device?.id ?: throw IllegalStateException("No device selected")
+                            )
+                            .sortedByDescending { it.timestamp }
+
+                        logs.firstOrNull()?.let {
+                            selectedDate = it.timestamp
+                        }
+                        wateringLogs.clear()
+                        availableDates.clear()
+                        availableDates.addAll(
+                            logs.map { it.timestamp }
+                                .distinctByDate()
+                        )
+                        wateringLogs.addAll(logs)
                     }
                     else -> Unit
                 }

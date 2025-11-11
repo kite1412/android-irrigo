@@ -4,5 +4,5 @@ import kite1412.irrigo.model.WaterCapacityLog
 import kotlinx.coroutines.flow.Flow
 
 interface WaterCapacityLogRepository {
-    fun getLatestLogFlow(deviceId: Int): Flow<WaterCapacityLog>
+    fun getLatestWaterCapacityLogFlow(deviceId: Int): Flow<WaterCapacityLog>
 }

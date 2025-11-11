@@ -45,10 +45,9 @@ class DashboardViewModel @Inject constructor(
         private set
     var waterContainer by mutableStateOf<WaterContainer?>(null)
         private set
-    var latestWateringLogs = emptyFlow<List<WateringLog>>()
-        private set
     var latestSoilMoistureLog = emptyFlow<SoilMoistureLog>()
         private set
+    val latestWateringLogs = mutableStateListOf<WateringLog>()
     var wateringConfig by mutableStateOf<WateringConfig?>(null)
     private val _uiEvent = MutableSharedFlow<DashboardUiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
@@ -86,14 +85,18 @@ class DashboardViewModel @Inject constructor(
             this@DashboardViewModel.device = newDevice
             waterContainer = deviceRepository.getWaterContainer(newDevice.id)
             latestWaterCapacityLog = waterCapacityLogRepository
-                .getLatestLogFlow(newDevice.id)
+                .getLatestWaterCapacityLogFlow(newDevice.id)
                 .onEach {
                     Log.d(
                         "DashboardViewModel",
                         "deviceId: ${newDevice.id}, latest water cap log: ${it.currentHeightCm}cm"
                     )
                 }
-            latestWateringLogs = wateringRepository.getWateringLogsFlow(newDevice.id)
+            latestWateringLogs.clear()
+            latestWateringLogs.addAll(
+                wateringRepository.getWateringLogs(newDevice.id)
+                    .sortedByDescending { it.timestamp }
+            )
             latestSoilMoistureLog = soilMoistureLogRepository.getLatestSoilMoistureLog(newDevice.id)
         }
     }

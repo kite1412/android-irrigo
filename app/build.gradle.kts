@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -6,6 +8,14 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
 }
+
+private val localProperties = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists()) load(file.inputStream())
+}
+
+val serverIp = localProperties.getProperty("SERVER_IP")
+    ?: throw GradleException("SERVER_IP is not defined in local.properties")
 
 android {
     namespace = "kite1412.irrigo"
@@ -65,6 +75,9 @@ dependencies {
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.androidx.datastore)
     implementation(libs.androidx.datastore.preferences)
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.cio)
+    implementation(libs.ktor.client.websockets)
     ksp(libs.hilt.compiler)
 
     testImplementation(libs.junit)

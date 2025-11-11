@@ -10,7 +10,7 @@ import javax.inject.Inject
 import kotlin.random.Random
 
 class MockWaterCapacityLogRepository @Inject constructor() : WaterCapacityLogRepository {
-    override fun getLatestLogFlow(deviceId: Int): Flow<WaterCapacityLog> = channelFlow {
+    override fun getLatestWaterCapacityLogFlow(deviceId: Int): Flow<WaterCapacityLog> = channelFlow {
         val waterContainer = MockData.waterContainer
 
         while (true) {

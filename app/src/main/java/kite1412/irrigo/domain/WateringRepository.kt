@@ -5,6 +5,7 @@ import kite1412.irrigo.model.WateringLog
 import kotlinx.coroutines.flow.Flow
 
 interface WateringRepository {
-    fun getWateringLogsFlow(deviceId: Int): Flow<List<WateringLog>>
+    fun getLatestWateringLog(): Flow<WateringLog>
+    fun getWateringLogs(deviceId: Int): List<WateringLog>
     suspend fun getConfig(): WateringConfig
 }
