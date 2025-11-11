@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.FlowRowScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -61,6 +60,7 @@ import kite1412.irrigo.designsystem.theme.PastelBlue
 import kite1412.irrigo.designsystem.util.IrrigoIcon
 import kite1412.irrigo.feature.logs.util.LogsGroupType
 import kite1412.irrigo.model.SoilMoistureLog
+import kite1412.irrigo.model.WaterCapacityLog
 import kite1412.irrigo.model.WateringLog
 import kite1412.irrigo.ui.component.DeviceSelect
 import kite1412.irrigo.ui.compositionlocal.LocalAppBarUpdater
@@ -77,6 +77,7 @@ fun LogsScreen(
     val selectedLogsGroup = viewModel.selectedLogsGroup
     val soilMoistureLogs = viewModel.soilMoistureLogs
     val wateringLogs = viewModel.wateringLogs
+    val waterCapacityLogs = viewModel.waterCapacityLogs
     val fetchingLogs = viewModel.fetchingLogs
     val selectedDate = viewModel.selectedDate
     val availableDates = viewModel.availableDates
@@ -181,9 +182,15 @@ fun LogsScreen(
                     availableDates = availableDates,
                     onDateChange = viewModel::updateSelectedDate
                 )
-                else -> Box(Modifier.fillMaxSize()) {
-                    Text(selectedLogsGroup?.string ?: "")
-                }
+                LogsGroupType.WATER_CAPACITY -> WaterCapacityLogs(
+                    logs = waterCapacityLogs
+                        .filter { l ->
+                            l.timestamp.toLocalDateTime().date == selectedDate?.toLocalDateTime()?.date
+                        },
+                    selectedDate = selectedDate ?: now(),
+                    availableDates = availableDates,
+                    onDateChange = viewModel::updateSelectedDate
+                )
             }
         }
     }
@@ -236,6 +243,12 @@ private fun LogsGroup(
     }
 }
 
+private val RowStyleNormal: TextStyle
+    @Composable get() = MaterialTheme.typography.bodySmall
+
+private val RowStyleBold: TextStyle
+    @Composable get() = RowStyleNormal.copy(fontWeight = FontWeight.Bold)
+
 @Composable
 private fun SoilMoistureLogs(
     logs: List<SoilMoistureLog>,
@@ -264,12 +277,10 @@ private fun SoilMoistureLogs(
     availableDates = availableDates,
     onDateChange = onDateChange,
     modifier = modifier,
-    rowStyles = MaterialTheme.typography.bodySmall.run {
-        listOf(
-            copy(fontWeight = FontWeight.Bold),
-            this
-        )
-    }
+    rowStyles = listOf(
+        RowStyleBold,
+        RowStyleNormal
+    )
 )
 
 @Composable
@@ -280,10 +291,6 @@ private fun WateringLogs(
     onDateChange: (Instant) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val normal = MaterialTheme.typography.bodySmall
-    val bold = normal.copy(
-        fontWeight = FontWeight.Bold
-    )
     var status by rememberSaveable { mutableStateOf("Semua") }
 
     DateFilterableTable(
@@ -311,7 +318,12 @@ private fun WateringLogs(
         availableDates = availableDates,
         onDateChange = onDateChange,
         modifier = modifier,
-        rowStyles = listOf(bold, bold, normal, normal),
+        rowStyles = listOf(
+            RowStyleBold,
+            RowStyleBold,
+            RowStyleNormal,
+            RowStyleNormal
+        ),
         controls = {
             Control(
                 selected = status,
@@ -325,9 +337,48 @@ private fun WateringLogs(
 }
 
 @Composable
+private fun WaterCapacityLogs(
+    logs: List<WaterCapacityLog>,
+    selectedDate: Instant,
+    availableDates: List<Instant>,
+    onDateChange: (Instant) -> Unit,
+    modifier: Modifier = Modifier
+) = DateFilterableTable(
+    columns = listOf("Tinggi (cm)", "Liter", "Waktu"),
+    rows = logs
+        .map {
+            listOf(
+                String.format(
+                    locale = null,
+                    format = "%.1f",
+                    it.currentHeightCm
+                ),
+                if (it.currentLitres != null) String.format(
+                    locale = null,
+                    format = "%.1f",
+                    it.currentLitres
+                ) else null,
+                it.timestamp.getLocalInstantInfo(
+                    timeFormat = "HH:mm:ss"
+                ).time
+            )
+        },
+    keys = { logs.getOrNull(it)?.id ?: it },
+    selectedDate = selectedDate,
+    availableDates = availableDates,
+    onDateChange = onDateChange,
+    modifier = modifier,
+    rowStyles = listOf(
+        RowStyleBold,
+        RowStyleBold,
+        RowStyleNormal
+    )
+)
+
+@Composable
 private fun DateFilterableTable(
     columns: List<String>,
-    rows: List<List<Any>>,
+    rows: List<List<Any?>>,
     keys: (Int) -> Any,
     selectedDate: Instant,
     availableDates: List<Instant>,
@@ -468,7 +519,7 @@ private fun <T> Control(
 @Composable
 private fun Table(
     columns: List<String>,
-    rows: List<List<Any>>,
+    rows: List<List<Any?>>,
     keys: (Int) -> Any,
     modifier: Modifier = Modifier,
     rowStyles: List<TextStyle> = columns.map {
@@ -548,7 +599,7 @@ private fun Table(
                 ) {
                     data.forEachIndexed { i, d ->
                         Text(
-                            text = d.toString(),
+                            text = d?.toString() ?: "-",
                             modifier = Modifier.weight(1f),
                             style = rowStyles[i].copy(
                                 textAlign = TextAlign.Center,

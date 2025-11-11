@@ -11,10 +11,12 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kite1412.irrigo.domain.DeviceRepository
 import kite1412.irrigo.domain.SoilMoistureLogRepository
+import kite1412.irrigo.domain.WaterCapacityLogRepository
 import kite1412.irrigo.domain.WateringRepository
 import kite1412.irrigo.feature.logs.util.LogsGroupType
 import kite1412.irrigo.model.Device
 import kite1412.irrigo.model.SoilMoistureLog
+import kite1412.irrigo.model.WaterCapacityLog
 import kite1412.irrigo.model.WateringLog
 import kite1412.irrigo.util.IntPreferencesKey
 import kite1412.irrigo.util.getPreference
@@ -29,7 +31,8 @@ class LogsViewModel @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val soilMoistureLogRepository: SoilMoistureLogRepository,
     private val deviceRepository: DeviceRepository,
-    private val wateringRepository: WateringRepository
+    private val wateringRepository: WateringRepository,
+    private val waterCapacityLogRepository: WaterCapacityLogRepository
 ) : ViewModel() {
     var device by mutableStateOf<Device?>(null)
         private set
@@ -41,6 +44,7 @@ class LogsViewModel @Inject constructor(
         private set
     val soilMoistureLogs = mutableStateListOf<SoilMoistureLog>()
     val wateringLogs = mutableStateListOf<WateringLog>()
+    val waterCapacityLogs = mutableStateListOf<WaterCapacityLog>()
     val availableDates = mutableStateListOf<Instant>()
     val devices = mutableStateListOf<Device>()
 
@@ -63,6 +67,7 @@ class LogsViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 fetchingLogs = true
+                availableDates.clear()
                 when (type) {
                     LogsGroupType.SOIL_MOISTURE -> {
                         val logs = soilMoistureLogRepository
@@ -75,7 +80,6 @@ class LogsViewModel @Inject constructor(
                             selectedDate = it.timestamp
                         }
                         soilMoistureLogs.clear()
-                        availableDates.clear()
                         availableDates.addAll(
                             logs.map { it.timestamp }
                                 .distinctByDate()
@@ -93,14 +97,29 @@ class LogsViewModel @Inject constructor(
                             selectedDate = it.timestamp
                         }
                         wateringLogs.clear()
-                        availableDates.clear()
                         availableDates.addAll(
                             logs.map { it.timestamp }
                                 .distinctByDate()
                         )
                         wateringLogs.addAll(logs)
                     }
-                    else -> Unit
+                    LogsGroupType.WATER_CAPACITY -> {
+                        val logs = waterCapacityLogRepository
+                            .getWaterCapacityLogs(
+                                deviceId = device?.id ?: throw java.lang.IllegalStateException("No device selected")
+                            )
+                            .sortedByDescending { it.timestamp }
+
+                        logs.firstOrNull()?.let {
+                            selectedDate = it.timestamp
+                        }
+                        waterCapacityLogs.clear()
+                        availableDates.addAll(
+                            logs.map { it.timestamp }
+                                .distinctByDate()
+                        )
+                        waterCapacityLogs.addAll(logs)
+                    }
                 }
             } finally {
                 fetchingLogs = false

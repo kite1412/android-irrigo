@@ -5,4 +5,5 @@ import kotlinx.coroutines.flow.Flow
 
 interface WaterCapacityLogRepository {
     fun getLatestWaterCapacityLogFlow(deviceId: Int): Flow<WaterCapacityLog>
+    fun getWaterCapacityLogs(deviceId: Int): List<WaterCapacityLog>
 }

@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import javax.inject.Inject
 import kotlin.random.Random
+import kotlin.time.Duration
 
 class MockWaterCapacityLogRepository @Inject constructor() : WaterCapacityLogRepository {
     override fun getLatestWaterCapacityLogFlow(deviceId: Int): Flow<WaterCapacityLog> = channelFlow {
@@ -31,4 +32,14 @@ class MockWaterCapacityLogRepository @Inject constructor() : WaterCapacityLogRep
             )
         }
     }
+
+    override fun getWaterCapacityLogs(deviceId: Int): List<WaterCapacityLog> =
+        List(100) {
+            WaterCapacityLog(
+                id = it + 1,
+                device = MockData.devices.first(),
+                timestamp = now() - Duration.parse("${it}h"),
+                currentHeightCm = (0..14).random().toDouble() + (0..100).random() / 100f
+            )
+        }
 }
