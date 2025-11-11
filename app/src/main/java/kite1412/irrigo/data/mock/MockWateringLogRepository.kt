@@ -20,7 +20,8 @@ class MockWateringLogRepository @Inject constructor() : WateringRepository {
                 device = MockData.devices.first(),
                 timestamp = now() - Duration.parse("${it}h"),
                 durationMs = 2000,
-                waterVolumeLiters = 1.0
+                waterVolumeLiters = 1.0,
+                manual = it % 2 == 0
             )
         }
 

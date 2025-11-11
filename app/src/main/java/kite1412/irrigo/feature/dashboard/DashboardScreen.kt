@@ -352,7 +352,7 @@ private fun LatestWateringLogs(
                             )
                         ) {
                             Text(
-                                text = "${i + 1}. ${instantInfo.day}",
+                                text = "${i + 1}. ${instantInfo.date}",
                                 modifier = Modifier.weight(8f)
                             )
                             Text(

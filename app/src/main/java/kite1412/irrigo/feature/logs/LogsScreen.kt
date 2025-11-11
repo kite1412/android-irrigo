@@ -38,6 +38,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -283,25 +284,43 @@ private fun WateringLogs(
     val bold = normal.copy(
         fontWeight = FontWeight.Bold
     )
+    var status by rememberSaveable { mutableStateOf("Semua") }
 
     DateFilterableTable(
         columns = listOf("Durasi (Detik)", "Jenis", "Volume Air (Liter)", "Waktu"),
-        rows = logs.map {
-            listOf(
-                it.durationMs / 1000f,
-                if (it.manual) "Manual" else "Otomatis",
-                it.waterVolumeLiters,
-                it.timestamp.getLocalInstantInfo(
-                    timeFormat = "HH:mm:ss"
-                ).time
-            )
-        },
+        rows = logs
+            .filter {
+                when (status) {
+                    "Manual" -> it.manual
+                    "Otomatis" -> !it.manual
+                    else -> true
+                }
+            }
+            .map {
+                listOf(
+                    it.durationMs / 1000f,
+                    if (it.manual) "Manual" else "Otomatis",
+                    it.waterVolumeLiters,
+                    it.timestamp.getLocalInstantInfo(
+                        timeFormat = "HH:mm:ss"
+                    ).time
+                )
+            },
         keys = { logs.getOrNull(it)?.id ?: it },
         selectedDate = selectedDate,
         availableDates = availableDates,
         onDateChange = onDateChange,
         modifier = modifier,
-        rowStyles = listOf(bold, bold, normal, normal)
+        rowStyles = listOf(bold, bold, normal, normal),
+        controls = {
+            Control(
+                selected = status,
+                options = listOf("Semua", "Otomatis", "Manual"),
+                onChange = { status = it },
+                selectedText = { it },
+                optionText = { it }
+            )
+        }
     )
 }
 
@@ -350,6 +369,31 @@ private fun DateSelect(
     availableDates: List<Instant>,
     onDateChange: (Instant) -> Unit,
     modifier: Modifier = Modifier
+) = Control(
+    selected = selectedDate,
+    options = availableDates,
+    onChange = onDateChange,
+    selectedText = {
+        it.getLocalInstantInfo(
+            dateFormat = "d MMM yyyy"
+        ).date
+    },
+    optionText = {
+        it.getLocalInstantInfo(
+            dateFormat = "d MMM yyyy"
+        ).date
+    },
+    modifier = modifier
+)
+
+@Composable
+private fun <T> Control(
+    selected: T,
+    options: List<T>,
+    onChange: (T) -> Unit,
+    selectedText: (T) -> String,
+    optionText: (T) -> String,
+    modifier: Modifier = Modifier
 ) {
     var showOptions by remember { mutableStateOf(false) }
 
@@ -368,9 +412,7 @@ private fun DateSelect(
                 LocalContentColor provides MaterialTheme.colorScheme.primary
             ) {
                 Text(
-                    text = selectedDate.getLocalInstantInfo(
-                        dateFormat = "d MMM yyyy"
-                    ).day,
+                    text = selectedText(selected),
                     style = LocalTextStyle.current.copy(
                         fontWeight = FontWeight.Bold,
                         fontStyle = FontStyle.Italic
@@ -396,27 +438,23 @@ private fun DateSelect(
                 fontWeight = FontWeight.Bold
             )
 
-            availableDates.forEach {
+            options.forEach {
                 DropdownMenuItem(
                     text = {
                         Text(
-                            text = it.getLocalInstantInfo(
-                                dateFormat = "d MMM yyyy"
-                            ).day,
+                            text = optionText(it),
                             style = style
                         )
                     },
                     onClick = {
-                        onDateChange(it)
+                        onChange(it)
                         showOptions = false
                     },
                     contentPadding = PaddingValues(
                         horizontal = 16.dp,
                         vertical = 8.dp
                     ),
-                    enabled = selectedDate
-                        .toLocalDateTime()
-                        .date != it.toLocalDateTime().date,
+                    enabled = selected != it,
                     colors = MenuDefaults.itemColors(
                         textColor = MaterialTheme.colorScheme.primary,
                         disabledTextColor = Gray

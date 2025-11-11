@@ -31,7 +31,7 @@ fun Instant.getLocalInstantInfo(
     val now = now()
 
     LocalInstantInfo(
-        day = if (now.toLocalDateTime().date == date) "Hari Ini"
+        date = if (now.toLocalDateTime().date == date) "Hari Ini"
         else if ((now - 1.days).toLocalDateTime().date == date) "Kemarin"
         else formatter.format(toJavaLocalDateTime()),
         time = timeFormatter.format(toJavaLocalDateTime())
