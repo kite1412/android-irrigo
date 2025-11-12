@@ -1,6 +1,7 @@
 package kite1412.irrigo.data.mock
 
-import kite1412.irrigo.domain.WaterCapacityLogRepository
+import kite1412.irrigo.domain.WaterCapacityRepository
+import kite1412.irrigo.model.WaterCapacityConfig
 import kite1412.irrigo.model.WaterCapacityLog
 import kite1412.irrigo.util.now
 import kotlinx.coroutines.delay
@@ -10,7 +11,7 @@ import javax.inject.Inject
 import kotlin.random.Random
 import kotlin.time.Duration
 
-class MockWaterCapacityLogRepository @Inject constructor() : WaterCapacityLogRepository {
+class MockWaterCapacityRepository @Inject constructor() : WaterCapacityRepository {
     override fun getLatestWaterCapacityLogFlow(deviceId: Int): Flow<WaterCapacityLog> = channelFlow {
         val waterContainer = MockData.waterContainer
         var id = 0
@@ -42,4 +43,9 @@ class MockWaterCapacityLogRepository @Inject constructor() : WaterCapacityLogRep
                 currentHeightCm = (0..14).random().toDouble() + (0..100).random() / 100f
             )
         }
+
+    override fun getConfig(): WaterCapacityConfig? =
+        WaterCapacityConfig(
+            minWaterCapacityPercent = 40f
+        )
 }

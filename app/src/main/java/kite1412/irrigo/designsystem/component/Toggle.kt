@@ -26,14 +26,14 @@ fun Toggle(
     onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    buttonSize: Dp = 32.dp
+    buttonSize: Dp = 24.dp
 ) {
     val animatedBackground by animateColorAsState(
         targetValue = if (checked) MaterialTheme.colorScheme.primary
         else DarkGray
     )
     val offsetX by animateDpAsState(
-        targetValue = if (checked) 32.dp else 0.dp
+        targetValue = if (checked) buttonSize else 0.dp
     )
     val padding = 4.dp
 

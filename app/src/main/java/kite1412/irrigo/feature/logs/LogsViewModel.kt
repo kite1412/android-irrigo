@@ -11,7 +11,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kite1412.irrigo.domain.DeviceRepository
 import kite1412.irrigo.domain.SoilMoistureLogRepository
-import kite1412.irrigo.domain.WaterCapacityLogRepository
+import kite1412.irrigo.domain.WaterCapacityRepository
 import kite1412.irrigo.domain.WateringRepository
 import kite1412.irrigo.feature.logs.util.LogsGroupType
 import kite1412.irrigo.model.Device
@@ -33,7 +33,7 @@ class LogsViewModel @Inject constructor(
     private val soilMoistureLogRepository: SoilMoistureLogRepository,
     private val deviceRepository: DeviceRepository,
     private val wateringRepository: WateringRepository,
-    private val waterCapacityLogRepository: WaterCapacityLogRepository
+    private val waterCapacityRepository: WaterCapacityRepository
 ) : ViewModel() {
     private var realtimeJob: Job? = null
     var device by mutableStateOf<Device?>(null)
@@ -119,7 +119,7 @@ class LogsViewModel @Inject constructor(
                         }
                     }
                     LogsGroupType.WATER_CAPACITY -> {
-                        val logs = waterCapacityLogRepository
+                        val logs = waterCapacityRepository
                             .getWaterCapacityLogs(deviceId)
                             .sortedByDescending { it.timestamp }
 
@@ -133,7 +133,7 @@ class LogsViewModel @Inject constructor(
                         )
                         waterCapacityLogs.addAll(logs)
                         realtimeJob = launch {
-                            waterCapacityLogRepository
+                            waterCapacityRepository
                                 .getLatestWaterCapacityLogFlow(deviceId)
                                 .collect {
                                     waterCapacityLogs.add(0, it)

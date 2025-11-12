@@ -12,7 +12,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kite1412.irrigo.domain.DeviceRepository
 import kite1412.irrigo.domain.SoilMoistureLogRepository
-import kite1412.irrigo.domain.WaterCapacityLogRepository
+import kite1412.irrigo.domain.WaterCapacityRepository
 import kite1412.irrigo.domain.WateringRepository
 import kite1412.irrigo.feature.dashboard.util.DashboardUiEvent
 import kite1412.irrigo.model.Device
@@ -35,7 +35,7 @@ import javax.inject.Inject
 class DashboardViewModel @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val deviceRepository: DeviceRepository,
-    private val waterCapacityLogRepository: WaterCapacityLogRepository,
+    private val waterCapacityRepository: WaterCapacityRepository,
     private val wateringRepository: WateringRepository,
     private val soilMoistureLogRepository: SoilMoistureLogRepository
 ) : ViewModel() {
@@ -84,7 +84,7 @@ class DashboardViewModel @Inject constructor(
         viewModelScope.launch {
             this@DashboardViewModel.device = newDevice
             waterContainer = deviceRepository.getWaterContainer(newDevice.id)
-            latestWaterCapacityLog = waterCapacityLogRepository
+            latestWaterCapacityLog = waterCapacityRepository
                 .getLatestWaterCapacityLogFlow(newDevice.id)
                 .onEach {
                     Log.d(
