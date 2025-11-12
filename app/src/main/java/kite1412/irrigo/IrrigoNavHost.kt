@@ -15,6 +15,7 @@ import kite1412.irrigo.designsystem.component.IrrigoAppBar
 import kite1412.irrigo.designsystem.component.IrrigoNavBar
 import kite1412.irrigo.feature.dashboard.navigation.DashboardRoute
 import kite1412.irrigo.feature.dashboard.navigation.dashboardScreen
+import kite1412.irrigo.feature.devicesettings.navigation.deviceSettingsScreen
 import kite1412.irrigo.feature.logs.navigation.logsScreen
 import kite1412.irrigo.util.Destination
 
@@ -43,6 +44,7 @@ fun IrrigoNavHost(
                 onSoilMoistureSettingClick = {}
             )
             logsScreen()
+            deviceSettingsScreen()
         }
     }
 }

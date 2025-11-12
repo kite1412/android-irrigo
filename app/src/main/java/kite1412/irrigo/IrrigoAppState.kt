@@ -8,6 +8,7 @@ import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.navOptions
 import kite1412.irrigo.designsystem.util.IrrigoIcon
 import kite1412.irrigo.feature.dashboard.navigation.DashboardRoute
+import kite1412.irrigo.feature.devicesettings.navigation.DeviceSettingsRoute
 import kite1412.irrigo.feature.logs.navigation.LogsRoute
 import kite1412.irrigo.util.Destination
 
@@ -32,9 +33,9 @@ class IrrigoAppState(
             name = "Log"
         ),
         Destination(
-            route = TempRoute::class,
+            route = DeviceSettingsRoute(null),
             iconId = IrrigoIcon.sliders,
-            name = "Pengaturan"
+            name = "Atur Perangkat"
         )
     )
 
@@ -61,6 +62,3 @@ class IrrigoAppState(
         )
     }
 }
-
-// TODO delete
-private object TempRoute
