@@ -35,6 +35,7 @@ class LogsViewModel @Inject constructor(
     private val wateringRepository: WateringRepository,
     private val waterCapacityLogRepository: WaterCapacityLogRepository
 ) : ViewModel() {
+    private var realtimeJob: Job? = null
     var device by mutableStateOf<Device?>(null)
         private set
     var selectedLogsGroup by mutableStateOf<LogsGroupType?>(null)
@@ -48,7 +49,6 @@ class LogsViewModel @Inject constructor(
     val waterCapacityLogs = mutableStateListOf<WaterCapacityLog>()
     val availableDates = mutableStateListOf<Instant>()
     val devices = mutableStateListOf<Device>()
-    var realtimeJob: Job? = null
 
     init {
         viewModelScope.launch {
