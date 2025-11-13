@@ -52,6 +52,22 @@ class DeviceSettingsViewModel @Inject constructor(
         }
     }
 
+    private fun updateWateringConfig() {
+        wateringConfig?.let {
+            viewModelScope.launch {
+                wateringRepository.updateConfig(it)
+            }
+        }
+    }
+
+    private fun updateWaterCapacityConfig() {
+        waterCapacityConfig?.let {
+            viewModelScope.launch {
+                waterCapacityRepository.updateConfig(it)
+            }
+        }
+    }
+
     fun updateAutomatedSetting(new: Boolean) {
         isAutomated = new
     }
@@ -80,17 +96,20 @@ class DeviceSettingsViewModel @Inject constructor(
         wateringConfig = wateringConfig?.copy(
             minSoilMoisturePercent = value
         )
+        updateWateringConfig()
     }
 
     fun updateWateringDuration(ms: Int) {
         wateringConfig = wateringConfig?.copy(
             durationMs = ms
         )
+        updateWateringConfig()
     }
 
     fun updateMinWaterCapacity(value: Float) {
         waterCapacityConfig = waterCapacityConfig?.copy(
             minWaterCapacityPercent = value
         )
+        updateWaterCapacityConfig()
     }
 }

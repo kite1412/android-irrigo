@@ -17,4 +17,8 @@ class BackendWaterCapacityRepository : WaterCapacityRepository {
     override suspend fun getConfig(): WaterCapacityConfig? {
         TODO("Not yet implemented")
     }
+
+    override suspend fun updateConfig(config: WaterCapacityConfig): WaterCapacityConfig? {
+        TODO("Not yet implemented")
+    }
 }

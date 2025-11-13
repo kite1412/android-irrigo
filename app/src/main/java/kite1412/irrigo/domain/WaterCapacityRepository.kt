@@ -8,4 +8,5 @@ interface WaterCapacityRepository {
     fun getLatestWaterCapacityLogFlow(deviceId: Int): Flow<WaterCapacityLog>
     fun getWaterCapacityLogs(deviceId: Int): List<WaterCapacityLog>
     suspend fun getConfig(): WaterCapacityConfig?
+    suspend fun updateConfig(config: WaterCapacityConfig): WaterCapacityConfig?
 }

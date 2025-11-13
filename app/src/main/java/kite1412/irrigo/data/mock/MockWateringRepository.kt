@@ -47,4 +47,10 @@ class MockWateringRepository @Inject constructor() : WateringRepository {
         durationMs = 2000,
         automated = true
     )
+
+    override suspend fun performWatering(deviceId: Int): Boolean = true
+
+    override suspend fun updateConfig(
+        config: WateringConfig
+    ): WateringConfig? = config
 }
