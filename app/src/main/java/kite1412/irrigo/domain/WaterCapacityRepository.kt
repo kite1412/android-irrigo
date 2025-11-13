@@ -7,5 +7,5 @@ import kotlinx.coroutines.flow.Flow
 interface WaterCapacityRepository {
     fun getLatestWaterCapacityLogFlow(deviceId: Int): Flow<WaterCapacityLog>
     fun getWaterCapacityLogs(deviceId: Int): List<WaterCapacityLog>
-    fun getConfig(): WaterCapacityConfig?
+    suspend fun getConfig(): WaterCapacityConfig?
 }

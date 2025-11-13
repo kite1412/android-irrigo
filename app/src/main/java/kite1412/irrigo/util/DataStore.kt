@@ -17,5 +17,13 @@ suspend fun <T> Context.updatePreferences(
 }
 
 suspend fun <T> Context.getPreference(
-    key: Preferences.Key<T>
-): T? = dataStore.data.first()[key]
+    key: Preferences.Key<T>,
+    defaultValue: T? = null
+): T? {
+    val value = dataStore.data.first()[key]
+    if (value == null) {
+        if (defaultValue != null) updatePreferences(key, defaultValue)
+        return defaultValue
+    }
+    return value
+}

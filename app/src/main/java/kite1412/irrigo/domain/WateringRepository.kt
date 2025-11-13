@@ -7,5 +7,5 @@ import kotlinx.coroutines.flow.Flow
 interface WateringRepository {
     fun getLatestWateringLog(deviceId: Int): Flow<WateringLog>
     fun getWateringLogs(deviceId: Int): List<WateringLog>
-    suspend fun getConfig(): WateringConfig
+    suspend fun getConfig(): WateringConfig?
 }

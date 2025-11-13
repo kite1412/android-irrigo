@@ -56,7 +56,7 @@ class LogsViewModel @Inject constructor(
             this@LogsViewModel.devices.addAll(devices)
             device = devices.firstOrNull {
                 it.id == (context
-                    .getPreference(IntPreferencesKey.SELECTED_DEVICE_ID) ?: 1)
+                    .getPreference(IntPreferencesKey.SELECTED_DEVICE_ID, 1) ?: 1)
             }
         }
     }

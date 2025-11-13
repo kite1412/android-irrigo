@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.channelFlow
 import javax.inject.Inject
 import kotlin.time.Duration
 
-class MockWateringLogRepository @Inject constructor() : WateringRepository {
+class MockWateringRepository @Inject constructor() : WateringRepository {
     override fun getLatestWateringLog(deviceId: Int): Flow<WateringLog> =
         channelFlow {
             var id = 0
@@ -42,7 +42,7 @@ class MockWateringLogRepository @Inject constructor() : WateringRepository {
             )
         }
 
-    override suspend fun getConfig(): WateringConfig = WateringConfig(
+    override suspend fun getConfig(): WateringConfig? = WateringConfig(
         minSoilMoisturePercent = 40f,
         durationMs = 2000,
         automated = true

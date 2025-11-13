@@ -60,7 +60,7 @@ class DashboardViewModel @Inject constructor(
             this@DashboardViewModel.devices.addAll(devices)
             val device = devices.firstOrNull {
                 it.id == (context
-                    .getPreference(IntPreferencesKey.SELECTED_DEVICE_ID) ?: 1)
+                    .getPreference(IntPreferencesKey.SELECTED_DEVICE_ID, 1) ?: 1)
             }
             wateringConfig = wateringRepository.getConfig()
             if (device == null) {

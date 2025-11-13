@@ -44,7 +44,7 @@ class MockWaterCapacityRepository @Inject constructor() : WaterCapacityRepositor
             )
         }
 
-    override fun getConfig(): WaterCapacityConfig? =
+    override suspend fun getConfig(): WaterCapacityConfig? =
         WaterCapacityConfig(
             minWaterCapacityPercent = 40f
         )
