@@ -9,11 +9,13 @@ import kotlinx.serialization.Serializable
 data object DashboardRoute
 
 fun NavGraphBuilder.dashboardScreen(
-    onSoilMoistureSettingClick: () -> Unit
+    onSoilMoistureSettingClick: () -> Unit,
+    onAutomatedWateringSettingClick: () -> Unit
 ) {
     composable<DashboardRoute> {
         DashboardScreen(
-            onSoilMoistureSettingClick = onSoilMoistureSettingClick
+            onSoilMoistureSettingClick = onSoilMoistureSettingClick,
+            onAutomatedWateringSettingClick = onAutomatedWateringSettingClick
         )
     }
 }

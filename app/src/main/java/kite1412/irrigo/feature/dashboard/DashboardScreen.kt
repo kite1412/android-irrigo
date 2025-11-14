@@ -75,6 +75,7 @@ import kotlin.math.max
 @Composable
 fun DashboardScreen(
     onSoilMoistureSettingClick: () -> Unit,
+    onAutomatedWateringSettingClick: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
@@ -112,7 +113,7 @@ fun DashboardScreen(
                         latestWateringLogs = latestWateringLogs,
                         onMoreWateringLog = {},
                         onWateringClick = {},
-                        onAutomatedWateringClick = {}
+                        onAutomatedWateringClick = onAutomatedWateringSettingClick
                     )
                     SoilMoisture(
                         latest = latestSoilMoistureLog,

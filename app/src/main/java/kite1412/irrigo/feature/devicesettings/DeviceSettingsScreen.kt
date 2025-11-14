@@ -1,5 +1,7 @@
 package kite1412.irrigo.feature.devicesettings
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -21,6 +23,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,6 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -40,6 +44,7 @@ import kite1412.irrigo.designsystem.component.TextField
 import kite1412.irrigo.designsystem.component.Toggle
 import kite1412.irrigo.designsystem.theme.DarkGray
 import kite1412.irrigo.feature.devicesettings.util.Setting
+import kotlinx.coroutines.delay
 
 @Composable
 fun DeviceSettingsScreen(
@@ -48,6 +53,7 @@ fun DeviceSettingsScreen(
 ) {
     val wateringConfig = viewModel.wateringConfig
     val waterCapacityConfig = viewModel.waterCapacityConfig
+    val highlightedSetting = viewModel.highlightedSetting
 
     if (wateringConfig != null && waterCapacityConfig != null) LazyColumn(
         modifier = modifier,
@@ -62,7 +68,8 @@ fun DeviceSettingsScreen(
                 wateringReminder = viewModel.wateringReminder,
                 onWateringReminderChange = viewModel::updateWateringReminder,
                 wateringDurationMs = wateringConfig.durationMs,
-                onWateringDurationChange = viewModel::updateWateringDuration
+                onWateringDurationChange = viewModel::updateWateringDuration,
+                highlightedSetting = highlightedSetting
             )
         }
         item {
@@ -70,7 +77,8 @@ fun DeviceSettingsScreen(
                 waterCapacityReminder = viewModel.waterCapacityReminder,
                 onWaterCapacityReminderChange = viewModel::updateWaterCapacityReminder,
                 minCapacity = waterCapacityConfig.minWaterCapacityPercent,
-                onMinCapacityChange = viewModel::updateMinWaterCapacity
+                onMinCapacityChange = viewModel::updateMinWaterCapacity,
+                highlightedSetting = highlightedSetting
             )
         }
     } else Box(
@@ -97,18 +105,25 @@ private fun WateringSection(
     onWateringReminderChange: (Boolean) -> Unit,
     wateringDurationMs: Int,
     onWateringDurationChange: (Int) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    highlightedSetting: Setting? = null
 ) = Section(
     name = "Penyiraman",
     modifier = modifier
 ) {
-    Setting(Setting.WATERING_AUTOMATED) {
+    Setting(
+        setting = Setting.WATERING_AUTOMATED,
+        highlight = highlightedSetting == Setting.WATERING_AUTOMATED
+    ) {
         Toggle(
             checked = isAutomated,
             onCheckedChange = onAutomatedChange
         )
     }
-    Setting(Setting.WATERING_MIN_SOIL_MOISTURE) {
+    Setting(
+        setting = Setting.WATERING_MIN_SOIL_MOISTURE,
+        highlight = highlightedSetting == Setting.WATERING_MIN_SOIL_MOISTURE
+    ) {
         TextEdit(
             value = String.format(
                 locale = null,
@@ -121,13 +136,19 @@ private fun WateringSection(
             keyboardType = KeyboardType.Number
         )
     }
-    Setting(Setting.WATERING_REMINDER) {
+    Setting(
+        setting = Setting.WATERING_REMINDER,
+        highlight = highlightedSetting == Setting.WATERING_REMINDER
+    ) {
         Toggle(
             checked = wateringReminder,
             onCheckedChange = onWateringReminderChange
         )
     }
-    Setting(Setting.WATERING_DURATION) {
+    Setting(
+        setting = Setting.WATERING_DURATION,
+        highlight = highlightedSetting == Setting.WATERING_DURATION
+    ) {
         TextEdit(
             value = (wateringDurationMs / 1000).toString(),
             editTitle = "Ubah Durasi Penyiraman (detik)",
@@ -144,7 +165,8 @@ private fun WaterCapacitySection(
     onWaterCapacityReminderChange: (Boolean) -> Unit,
     minCapacity: Float,
     onMinCapacityChange: (Float) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    highlightedSetting: Setting? = null
 ) = Section(
     name = "Kapasitas Air",
     modifier = modifier
@@ -152,7 +174,10 @@ private fun WaterCapacitySection(
     Setting(
         setting = Setting.WATER_CAPACITY_REMINDER,
         subSettings = {
-            SubSetting(Setting.WATER_CAPACITY_MIN_CAPACITY) {
+            SubSetting(
+                setting = Setting.WATER_CAPACITY_MIN_CAPACITY,
+                highlight = highlightedSetting == Setting.WATER_CAPACITY_MIN_CAPACITY
+            ) {
                 TextEdit(
                     value = String.format(
                         locale = null,
@@ -165,7 +190,8 @@ private fun WaterCapacitySection(
                     keyboardType = KeyboardType.Number
                 )
             }
-        }
+        },
+        highlight = highlightedSetting == Setting.WATER_CAPACITY_REMINDER
     ) {
         Toggle(
             checked = waterCapacityReminder,
@@ -215,10 +241,13 @@ private fun ColumnScope.Setting(
     setting: Setting,
     modifier: Modifier = Modifier,
     subSettings: (@Composable ColumnScope.() -> Unit)? = null,
+    highlight: Boolean = false,
     action: @Composable RowScope.() -> Unit
 ) {
     Row(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .background(settingBackground(highlight)),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -246,10 +275,13 @@ private fun ColumnScope.Setting(
 private fun ColumnScope.SubSetting(
     setting: Setting,
     modifier: Modifier = Modifier,
+    highlight: Boolean = false,
     action: @Composable RowScope.() -> Unit
 ) {
     Row(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .background(settingBackground(highlight)),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) { 
@@ -257,6 +289,31 @@ private fun ColumnScope.SubSetting(
         action(this)
     }
 }
+
+@Composable
+private fun settingBackground(highlighted: Boolean): Color =
+    if (highlighted) {
+        var start by rememberSaveable {
+            mutableStateOf(false)
+        }
+        val bg by animateColorAsState(
+            targetValue = if (start && highlighted) Color.Black.copy(
+                alpha = 0.2f
+            ) else Color.Transparent,
+            animationSpec = tween(500)
+        )
+
+        LaunchedEffect(Unit) {
+            if (!start && highlighted) {
+                delay(200)
+                start = true
+                delay(700)
+                start = false
+            }
+        }
+
+        bg
+    } else Color.Transparent
 
 @Composable
 private fun RowScope.TextEdit(

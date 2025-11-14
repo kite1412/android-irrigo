@@ -16,6 +16,8 @@ import kite1412.irrigo.designsystem.component.IrrigoNavBar
 import kite1412.irrigo.feature.dashboard.navigation.DashboardRoute
 import kite1412.irrigo.feature.dashboard.navigation.dashboardScreen
 import kite1412.irrigo.feature.devicesettings.navigation.deviceSettingsScreen
+import kite1412.irrigo.feature.devicesettings.navigation.navigateToDeviceSettings
+import kite1412.irrigo.feature.devicesettings.util.Setting
 import kite1412.irrigo.feature.logs.navigation.logsScreen
 import kite1412.irrigo.util.Destination
 
@@ -41,7 +43,16 @@ fun IrrigoNavHost(
             modifier = Modifier.fillMaxSize()
         ) {
             dashboardScreen(
-                onSoilMoistureSettingClick = {}
+                onSoilMoistureSettingClick = {
+                    navController.navigateToDeviceSettings(
+                        highlightSettingOrdinal = Setting.WATERING_MIN_SOIL_MOISTURE.ordinal
+                    )
+                },
+                onAutomatedWateringSettingClick = {
+                    navController.navigateToDeviceSettings(
+                        highlightSettingOrdinal = Setting.WATERING_AUTOMATED.ordinal
+                    )
+                }
             )
             logsScreen()
             deviceSettingsScreen()
