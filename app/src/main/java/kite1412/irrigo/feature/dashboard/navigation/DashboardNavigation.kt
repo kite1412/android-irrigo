@@ -10,12 +10,14 @@ data object DashboardRoute
 
 fun NavGraphBuilder.dashboardScreen(
     onSoilMoistureSettingClick: () -> Unit,
-    onAutomatedWateringSettingClick: () -> Unit
+    onAutomatedWateringSettingClick: () -> Unit,
+    onMoreWateringLogClick: () -> Unit
 ) {
     composable<DashboardRoute> {
         DashboardScreen(
             onSoilMoistureSettingClick = onSoilMoistureSettingClick,
-            onAutomatedWateringSettingClick = onAutomatedWateringSettingClick
+            onAutomatedWateringSettingClick = onAutomatedWateringSettingClick,
+            onMoreWateringLogClick = onMoreWateringLogClick
         )
     }
 }

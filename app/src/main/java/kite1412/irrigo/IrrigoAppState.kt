@@ -28,7 +28,7 @@ class IrrigoAppState(
             name = "Dashboard"
         ),
         Destination(
-            route = LogsRoute,
+            route = LogsRoute(null),
             iconId = IrrigoIcon.clipboard,
             name = "Log"
         ),

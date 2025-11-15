@@ -5,14 +5,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kite1412.irrigo.domain.DeviceRepository
 import kite1412.irrigo.domain.SoilMoistureLogRepository
 import kite1412.irrigo.domain.WaterCapacityRepository
 import kite1412.irrigo.domain.WateringRepository
+import kite1412.irrigo.feature.logs.navigation.LogsRoute
 import kite1412.irrigo.feature.logs.util.LogsGroupType
 import kite1412.irrigo.model.Device
 import kite1412.irrigo.model.SoilMoistureLog
@@ -29,6 +32,7 @@ import kotlin.time.Instant
 
 @HiltViewModel
 class LogsViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
     @param:ApplicationContext private val context: Context,
     private val soilMoistureLogRepository: SoilMoistureLogRepository,
     private val deviceRepository: DeviceRepository,
@@ -38,7 +42,11 @@ class LogsViewModel @Inject constructor(
     private var realtimeJob: Job? = null
     var device by mutableStateOf<Device?>(null)
         private set
-    var selectedLogsGroup by mutableStateOf<LogsGroupType?>(null)
+    var selectedLogsGroup by mutableStateOf<LogsGroupType?>(
+        savedStateHandle.toRoute<LogsRoute>()
+            .selectedGroupOrdinal
+            ?.let(LogsGroupType.entries::getOrNull)
+    )
         private set
     var fetchingLogs by mutableStateOf(false)
         private set
@@ -58,6 +66,7 @@ class LogsViewModel @Inject constructor(
                 it.id == (context
                     .getPreference(IntPreferencesKey.SELECTED_DEVICE_ID, 1) ?: 1)
             }
+            selectedLogsGroup?.let(::tryFetchLogs)
         }
     }
 

@@ -619,9 +619,12 @@ private fun Table(
             } else item {
                 Text(
                     text = "Tidak ada log yang tersedia",
-                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
                     style = LocalTextStyle.current.copy(
-                        fontStyle = FontStyle.Italic
+                        fontStyle = FontStyle.Italic,
+                        textAlign = TextAlign.Center
                     )
                 )
             }
