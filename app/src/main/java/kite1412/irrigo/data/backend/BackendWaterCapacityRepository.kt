@@ -4,13 +4,14 @@ import kite1412.irrigo.domain.WaterCapacityRepository
 import kite1412.irrigo.model.WaterCapacityConfig
 import kite1412.irrigo.model.WaterCapacityLog
 import kotlinx.coroutines.flow.Flow
+import javax.inject.Inject
 
-class BackendWaterCapacityRepository : WaterCapacityRepository {
+class BackendWaterCapacityRepository @Inject constructor() : WaterCapacityRepository {
     override fun getLatestWaterCapacityLogFlow(deviceId: Int): Flow<WaterCapacityLog> {
         TODO("Not yet implemented")
     }
 
-    override fun getWaterCapacityLogs(deviceId: Int): List<WaterCapacityLog> {
+    override suspend fun getWaterCapacityLogs(deviceId: Int): List<WaterCapacityLog> {
         TODO("Not yet implemented")
     }
 

@@ -34,7 +34,7 @@ class MockWaterCapacityRepository @Inject constructor() : WaterCapacityRepositor
         }
     }
 
-    override fun getWaterCapacityLogs(deviceId: Int): List<WaterCapacityLog> =
+    override suspend fun getWaterCapacityLogs(deviceId: Int): List<WaterCapacityLog> =
         List(100) {
             WaterCapacityLog(
                 id = it + 1,

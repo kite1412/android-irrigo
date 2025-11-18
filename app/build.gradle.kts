@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.Properties
 
 plugins {
@@ -9,13 +10,13 @@ plugins {
     alias(libs.plugins.hilt)
 }
 
-private val localProperties = Properties().apply {
+val localProperties = Properties().apply {
     val file = rootProject.file("local.properties")
     if (file.exists()) load(file.inputStream())
 }
 
-val serverIp = localProperties.getProperty("SERVER_IP")
-    ?: throw GradleException("SERVER_IP is not defined in local.properties")
+val serverUrl = localProperties.getProperty("SERVER_URL")
+    ?: throw GradleException("SERVER_URL is not defined in local.properties")
 
 android {
     namespace = "kite1412.irrigo"
@@ -29,6 +30,8 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "SERVER_URL", "\"$serverUrl\"")
     }
 
     buildTypes {
@@ -44,17 +47,18 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
 kotlin {
     sourceSets.all {
         languageSettings.optIn("kotlin.time.ExperimentalTime")
+    }
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_11)
     }
 }
 
@@ -78,6 +82,8 @@ dependencies {
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.cio)
     implementation(libs.ktor.client.websockets)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json)
     ksp(libs.hilt.compiler)
 
     testImplementation(libs.junit)
