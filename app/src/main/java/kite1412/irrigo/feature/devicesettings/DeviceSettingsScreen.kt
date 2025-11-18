@@ -163,8 +163,8 @@ private fun WateringSection(
 private fun WaterCapacitySection(
     waterCapacityReminder: Boolean,
     onWaterCapacityReminderChange: (Boolean) -> Unit,
-    minCapacity: Float,
-    onMinCapacityChange: (Float) -> Unit,
+    minCapacity: Double,
+    onMinCapacityChange: (Double) -> Unit,
     modifier: Modifier = Modifier,
     highlightedSetting: Setting? = null
 ) = Section(
@@ -185,7 +185,7 @@ private fun WaterCapacitySection(
                         minCapacity
                     ),
                     editTitle = "Ubah Minimum Kapasitas Air",
-                    onSave = { onMinCapacityChange(it.toFloat()) },
+                    onSave = { onMinCapacityChange(it.toDouble()) },
                     desc = "%",
                     keyboardType = KeyboardType.Number
                 )

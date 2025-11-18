@@ -115,7 +115,7 @@ class DeviceSettingsViewModel @Inject constructor(
         updateWateringConfig()
     }
 
-    fun updateMinWaterCapacity(value: Float) {
+    fun updateMinWaterCapacity(value: Double) {
         waterCapacityConfig = waterCapacityConfig?.copy(
             minWaterCapacityPercent = value
         )

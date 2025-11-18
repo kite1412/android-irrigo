@@ -12,7 +12,7 @@ object MockData {
     }
     val waterContainer = WaterContainer(
         device = devices.first(),
-        heightCm = 30.0,
-        capacityLitres = 1000.0
+        heightCm = 10.0,
+        capacityLitres = 5.0
     )
 }

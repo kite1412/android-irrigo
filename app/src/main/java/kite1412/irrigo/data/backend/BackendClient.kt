@@ -8,10 +8,12 @@ import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.get
+import io.ktor.client.request.patch
 import io.ktor.client.request.post
-import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.request.url
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kite1412.irrigo.BuildConfig
 import kite1412.irrigo.data.backend.dto.response.ApiResponse
@@ -28,6 +30,7 @@ abstract class BackendClient {
 
         defaultRequest {
             url(BuildConfig.SERVER_URL)
+            contentType(ContentType.Application.Json)
         }
     }
 
@@ -53,7 +56,7 @@ abstract class BackendClient {
                 message = res.message
             )
                 .also {
-                    Log.d(logTag, "$path: success, message: ${it.message}")
+                    Log.d(logTag, "$path: success, message: ${it.message}, data: ${it.data}")
                 }
         } catch (e: Exception) {
             Log.e(logTag, "GET $path: error, message: ${e.message}")
@@ -94,12 +97,12 @@ abstract class BackendClient {
      * @param path /<path name>
      * @param body request body
      */
-    protected suspend inline fun <reified T, reified R> put(
+    protected suspend inline fun <reified T, reified R> patch(
         path: String,
         body: T? = null
     ): BackendResult<R> = try {
         val res = responseOrThrow(
-            client.put {
+            client.patch {
                 url(path)
                 body.let(::setBody)
             }.body<ApiResponse<R>>()
@@ -110,7 +113,7 @@ abstract class BackendClient {
             message = res.message
         )
     } catch (e: Exception) {
-        Log.e(logTag, "PUT $path: error, message: ${e.message}")
+        Log.e(logTag, "PATCH $path: error, message: ${e.message}")
         BackendResult.Error(
             message = e.message ?: "Unknown error",
             throwable = e

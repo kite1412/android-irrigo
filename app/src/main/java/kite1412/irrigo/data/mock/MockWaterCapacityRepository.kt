@@ -24,7 +24,7 @@ class MockWaterCapacityRepository @Inject constructor() : WaterCapacityRepositor
             trySend(
                 WaterCapacityLog(
                     id = --id,
-                    device = MockData.devices.first(),
+                    waterContainer = waterContainer,
                     timestamp = now(),
                     currentHeightCm = waterContainer.heightCm * random,
                     currentLitres = waterContainer.capacityLitres?.times(random)
@@ -38,7 +38,7 @@ class MockWaterCapacityRepository @Inject constructor() : WaterCapacityRepositor
         List(100) {
             WaterCapacityLog(
                 id = it + 1,
-                device = MockData.devices.first(),
+                waterContainer = MockData.waterContainer,
                 timestamp = now() - Duration.parse("${it}h"),
                 currentHeightCm = (0..14).random().toDouble() + (0..100).random() / 100f
             )
@@ -46,7 +46,7 @@ class MockWaterCapacityRepository @Inject constructor() : WaterCapacityRepositor
 
     override suspend fun getConfig(): WaterCapacityConfig? =
         WaterCapacityConfig(
-            minWaterCapacityPercent = 40f
+            minWaterCapacityPercent = 40.0
         )
 
     override suspend fun updateConfig(
