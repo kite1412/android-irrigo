@@ -6,6 +6,7 @@ import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.websocket.WebSockets
+import io.ktor.client.plugins.websocket.webSocketSession
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.get
 import io.ktor.client.request.patch
@@ -15,9 +16,21 @@ import io.ktor.client.request.url
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
+import io.ktor.websocket.Frame
+import io.ktor.websocket.close
+import io.ktor.websocket.readText
 import kite1412.irrigo.BuildConfig
 import kite1412.irrigo.data.backend.dto.response.ApiResponse
 import kite1412.irrigo.data.backend.util.BackendResult
+import kite1412.irrigo.data.backend.util.WebSocketMessageType
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 abstract class BackendClient {
     protected val logTag = "BackendClient"
@@ -118,5 +131,33 @@ abstract class BackendClient {
             message = e.message ?: "Unknown error",
             throwable = e
         )
+    }
+
+    protected fun observeMessages(type: WebSocketMessageType): Flow<JsonObject> = channelFlow {
+        val session = client.webSocketSession(BuildConfig.SERVER_URL_WS)
+
+        launch {
+            for (frame in session.incoming) {
+                if (frame is Frame.Text) {
+                    val json = Json
+                        .parseToJsonElement(frame.readText())
+                        .jsonObject
+
+                    if (type.value == json["type"]?.jsonPrimitive?.content) {
+                        send(
+                            JsonObject(
+                                json.filterKeys { k -> k != "type" }
+                            )
+                        )
+                    }
+                }
+            }
+        }
+
+        awaitClose {
+            launch {
+                session.close()
+            }
+        }
     }
 }

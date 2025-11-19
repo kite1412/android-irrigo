@@ -18,6 +18,9 @@ val localProperties = Properties().apply {
 val serverUrl = localProperties.getProperty("SERVER_URL")
     ?: throw GradleException("SERVER_URL is not defined in local.properties")
 
+val serverUrlWs = localProperties.getProperty("SERVER_URL_WS")
+    ?: throw GradleException("SERVER_URL_WS is not defined in local.properties")
+
 android {
     namespace = "kite1412.irrigo"
     compileSdk = 36
@@ -32,6 +35,7 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField("String", "SERVER_URL", "\"$serverUrl\"")
+        buildConfigField("String", "SERVER_URL_WS", "\"$serverUrlWs\"")
     }
 
     buildTypes {
