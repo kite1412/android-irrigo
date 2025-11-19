@@ -4,9 +4,7 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import kite1412.irrigo.data.mock.MockSoilMoistureLogRepository
 import kite1412.irrigo.data.mock.MockWateringRepository
-import kite1412.irrigo.domain.SoilMoistureLogRepository
 import kite1412.irrigo.domain.WateringRepository
 import javax.inject.Singleton
 
@@ -25,7 +23,7 @@ interface MockModule {
     @Singleton
     fun bindWateringRepository(impl: MockWateringRepository): WateringRepository
 
-    @Binds
-    @Singleton
-    fun bindSoilMoistureLogRepository(impl: MockSoilMoistureLogRepository): SoilMoistureLogRepository
+//    @Binds
+//    @Singleton
+//    fun bindSoilMoistureLogRepository(impl: MockSoilMoistureLogRepository): SoilMoistureLogRepository
 }

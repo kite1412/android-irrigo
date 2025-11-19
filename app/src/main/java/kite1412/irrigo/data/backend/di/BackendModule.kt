@@ -5,8 +5,10 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import kite1412.irrigo.data.backend.BackendDeviceRepository
+import kite1412.irrigo.data.backend.BackendSoilMoistureLogRepository
 import kite1412.irrigo.data.backend.BackendWaterCapacityRepository
 import kite1412.irrigo.domain.DeviceRepository
+import kite1412.irrigo.domain.SoilMoistureLogRepository
 import kite1412.irrigo.domain.WaterCapacityRepository
 import javax.inject.Singleton
 
@@ -24,4 +26,10 @@ interface BackendModule {
     fun bindWaterCapacityRepository(
         impl: BackendWaterCapacityRepository
     ): WaterCapacityRepository
+
+    @Binds
+    @Singleton
+    fun bindSoilMoistureLogRepository(
+        impl: BackendSoilMoistureLogRepository
+    ): SoilMoistureLogRepository
 }

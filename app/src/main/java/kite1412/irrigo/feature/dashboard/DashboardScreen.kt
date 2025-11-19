@@ -506,7 +506,7 @@ private fun SoilMoisture(
         ) {
             SoilMoistureIndicator(
                 min = minPercentage,
-                value = latest?.moisturePercent,
+                value = latest?.moisturePercent?.toFloat(),
                 modifier = Modifier.weight(4f)
             )
             Column(
