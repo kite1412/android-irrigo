@@ -17,10 +17,7 @@ data class BackendWaterContainer(
     @SerialName("height_cm")
     val heightCm: Double,
     @SerialName("capacity_litres")
-    val capacityLitres: Double,
-    // TODO delete
-    @SerialName("devices")
-    val device: BackendDevice? = null
+    val capacityLitres: Double
 )
 
 fun BackendWaterContainer.asModel() = WaterContainer(

@@ -26,6 +26,7 @@ import kite1412.irrigo.data.backend.util.WebSocketMessageType
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -136,14 +137,16 @@ abstract class BackendClient {
     protected fun observeMessages(type: WebSocketMessageType): Flow<JsonObject> = channelFlow {
         val session = client.webSocketSession(BuildConfig.SERVER_URL_WS)
 
-        launch {
-            for (frame in session.incoming) {
+        session.incoming
+            .receiveAsFlow()
+            .collect { frame ->
                 if (frame is Frame.Text) {
                     val json = Json
                         .parseToJsonElement(frame.readText())
                         .jsonObject
 
                     if (type.value == json["type"]?.jsonPrimitive?.content) {
+                        Log.d(logTag, "(WebSocket) ${type.value}: $json")
                         send(
                             JsonObject(
                                 json.filterKeys { k -> k != "type" }
@@ -152,7 +155,6 @@ abstract class BackendClient {
                     }
                 }
             }
-        }
 
         awaitClose {
             launch {

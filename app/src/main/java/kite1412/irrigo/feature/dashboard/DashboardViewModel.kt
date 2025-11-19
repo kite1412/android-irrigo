@@ -1,7 +1,6 @@
 package kite1412.irrigo.feature.dashboard
 
 import android.content.Context
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -26,10 +25,9 @@ import kite1412.irrigo.model.WateringLog
 import kite1412.irrigo.util.IntPreferencesKey
 import kite1412.irrigo.util.getPreference
 import kite1412.irrigo.util.updatePreferences
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -44,13 +42,13 @@ class DashboardViewModel @Inject constructor(
 ) : ViewModel() {
     var device by mutableStateOf<Device?>(null)
         private set
-    var latestWaterCapacityLog = emptyFlow<WaterCapacityLog>()
+    var latestWaterCapacityLog by mutableStateOf<WaterCapacityLog?>(null)
         private set
     var waterContainer by mutableStateOf<WaterContainer?>(null)
         private set
-    var latestSoilMoistureLog = emptyFlow<SoilMoistureLog>()
+    var latestSoilMoistureLog by mutableStateOf<SoilMoistureLog?>(null)
         private set
-    var latestLightIntensityLog = emptyFlow<LightIntensityLog>()
+    var latestLightIntensityLog by mutableStateOf<LightIntensityLog?>(null)
         private set
     val latestWateringLogs = mutableStateListOf<WateringLog>()
     var wateringConfig by mutableStateOf<WateringConfig?>(null)
@@ -59,6 +57,7 @@ class DashboardViewModel @Inject constructor(
     val uiEvent = _uiEvent.asSharedFlow()
 
     val devices = mutableStateListOf<Device>()
+    val realtimeJobs = mutableListOf<Job>()
 
     init {
         viewModelScope.launch {
@@ -67,6 +66,11 @@ class DashboardViewModel @Inject constructor(
             val device = devices.firstOrNull {
                 it.id == (context
                     .getPreference(IntPreferencesKey.SELECTED_DEVICE_ID, 1) ?: 1)
+            } ?: devices.firstOrNull()?.also {
+                context.updatePreferences(
+                    key = IntPreferencesKey.SELECTED_DEVICE_ID,
+                    value = it.id
+                )
             }
             wateringConfig = wateringRepository.getConfig()
             if (device == null) {
@@ -78,24 +82,43 @@ class DashboardViewModel @Inject constructor(
 
     private fun updateDeviceInfo(newDevice: Device) {
         viewModelScope.launch {
+            realtimeJobs.forEach {
+                it.cancel()
+            }
+            realtimeJobs.clear()
             this@DashboardViewModel.device = newDevice
             waterContainer = deviceRepository.getWaterContainer(newDevice.id)
-            latestWaterCapacityLog = waterCapacityRepository
-                .getLatestWaterCapacityLogFlow(newDevice.id)
-                .onEach {
-                    Log.d(
-                        "DashboardViewModel",
-                        "deviceId: ${newDevice.id}, latest water cap log: ${it.currentHeightCm}cm"
-                    )
+            realtimeJobs.add(
+                launch {
+                    waterCapacityRepository
+                        .getLatestWaterCapacityLogFlow(newDevice.id)
+                        .collect {
+                            latestWaterCapacityLog = it
+                        }
                 }
-            latestLightIntensityLog = lightIntensityLogRepository
-                .getLatestLightIntensityLog(newDevice.id)
+            )
+            realtimeJobs.add(
+                launch {
+                    lightIntensityLogRepository
+                        .getLatestLightIntensityLog(newDevice.id)
+                        .collect {
+                            latestLightIntensityLog = it
+                        }
+                }
+            )
             latestWateringLogs.clear()
             latestWateringLogs.addAll(
                 wateringRepository.getWateringLogs(newDevice.id)
                     .sortedByDescending { it.timestamp }
             )
-            latestSoilMoistureLog = soilMoistureLogRepository.getLatestSoilMoistureLog(newDevice.id)
+            realtimeJobs.add(
+                launch {
+                    soilMoistureLogRepository.getLatestSoilMoistureLog(newDevice.id)
+                        .collect {
+                            latestSoilMoistureLog = it
+                        }
+                }
+            )
         }
     }
 

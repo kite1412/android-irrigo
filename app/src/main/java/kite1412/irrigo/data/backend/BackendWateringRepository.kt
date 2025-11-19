@@ -8,21 +8,22 @@ import kite1412.irrigo.data.backend.dto.response.asModel
 import kite1412.irrigo.data.backend.util.ApiPaths.WATERING_CONFIG
 import kite1412.irrigo.data.backend.util.ApiPaths.WATERING_LOGS
 import kite1412.irrigo.data.backend.util.BackendResult
-import kite1412.irrigo.data.mock.MockWateringRepository
+import kite1412.irrigo.data.backend.util.WebSocketMessageType
 import kite1412.irrigo.domain.WateringRepository
 import kite1412.irrigo.model.WateringConfig
 import kite1412.irrigo.model.WateringLog
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
+import kite1412.irrigo.data.backend.util.WateringLog as _WateringLog
 
-class BackendWateringRepository @Inject constructor(
-    private val mockRepository: MockWateringRepository
-) : BackendClient(),
+class BackendWateringRepository @Inject constructor() :
+    BackendClient(),
     WateringRepository
 {
-
     override fun getLatestWateringLog(deviceId: Int): Flow<WateringLog> =
-        mockRepository.getLatestWateringLog(deviceId)
+        observeMessages(WebSocketMessageType.WATERING_LOG)
+            .map(::_WateringLog)
 
     override suspend fun getWateringLogs(deviceId: Int): List<WateringLog> {
         val res = get<List<BackendWateringLogs>>("${WATERING_LOGS}/$deviceId")

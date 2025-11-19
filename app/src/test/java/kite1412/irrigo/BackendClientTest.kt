@@ -2,6 +2,7 @@ package kite1412.irrigo
 
 import kite1412.irrigo.data.backend.BackendClient
 import kite1412.irrigo.data.backend.util.WebSocketMessageType
+import kite1412.irrigo.model.SoilMoistureLog
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -18,18 +19,18 @@ class BackendClientTest {
     @Test
     fun observeMessages_isSuccess() {
         runBlocking {
-            var receiveCount = 0
+            var soilMoistureLog: SoilMoistureLog? = null
             launch {
                 client
                     .observe(WebSocketMessageType.SOIL_MOISTURE_LOG)
                     .collect {
                         println(it)
-                        receiveCount++
+                        soilMoistureLog = kite1412.irrigo.data.backend.util.SoilMoistureLog(it)
                         cancel()
                     }
             }
             delay(5000)
-            assert(receiveCount > 0)
+            assert(soilMoistureLog != null)
         }
     }
 }

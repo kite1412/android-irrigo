@@ -4,7 +4,7 @@ import kotlin.time.Instant
 
 data class LightIntensityLog(
     val device: Device,
-    val lux: Int,
+    val lux: Double,
     val status: LightIntensityStatus,
     val timestamp: Instant
 )

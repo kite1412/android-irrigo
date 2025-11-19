@@ -7,21 +7,22 @@ import kite1412.irrigo.data.backend.dto.response.asModel
 import kite1412.irrigo.data.backend.util.ApiPaths.WATER_CAPACITY_CONFIG
 import kite1412.irrigo.data.backend.util.ApiPaths.WATER_CAPACITY_LOGS
 import kite1412.irrigo.data.backend.util.BackendResult
-import kite1412.irrigo.data.mock.MockWaterCapacityRepository
+import kite1412.irrigo.data.backend.util.WebSocketMessageType
 import kite1412.irrigo.domain.WaterCapacityRepository
 import kite1412.irrigo.model.WaterCapacityConfig
 import kite1412.irrigo.model.WaterCapacityLog
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
+import kite1412.irrigo.data.backend.util.WaterCapacityLog as _WaterCapacityLog
 
-class BackendWaterCapacityRepository @Inject constructor(
-    private val mockRepo: MockWaterCapacityRepository
-) : BackendClient(),
+class BackendWaterCapacityRepository @Inject constructor() :
+    BackendClient(),
     WaterCapacityRepository
 {
-    // TODO update
     override fun getLatestWaterCapacityLogFlow(deviceId: Int): Flow<WaterCapacityLog> =
-        mockRepo.getLatestWaterCapacityLogFlow(deviceId)
+        observeMessages(WebSocketMessageType.WATER_CAPACITY_LOG)
+            .map(::_WaterCapacityLog)
 
     override suspend fun getWaterCapacityLogs(deviceId: Int): List<WaterCapacityLog> {
         val res = get<List<BackendWaterCapacityLog>>("${WATER_CAPACITY_LOGS}/$deviceId")

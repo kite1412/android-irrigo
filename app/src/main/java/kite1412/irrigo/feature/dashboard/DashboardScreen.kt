@@ -57,7 +57,6 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kite1412.irrigo.designsystem.theme.DarkGray
 import kite1412.irrigo.designsystem.theme.DarkPastelBlue
 import kite1412.irrigo.designsystem.theme.Gray
@@ -90,12 +89,12 @@ fun DashboardScreen(
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val device = viewModel.device
-    val latestWaterCapacityLog by viewModel.latestWaterCapacityLog.collectAsStateWithLifecycle(null)
+    val latestWaterCapacityLog = viewModel.latestWaterCapacityLog
     val waterContainer = viewModel.waterContainer
     val latestWateringLogs = viewModel.latestWateringLogs
-    val latestSoilMoistureLog by viewModel.latestSoilMoistureLog.collectAsStateWithLifecycle(null)
+    val latestSoilMoistureLog = viewModel.latestSoilMoistureLog
     val wateringConfig = viewModel.wateringConfig
-    val latestLightIntensityLog by viewModel.latestLightIntensityLog.collectAsStateWithLifecycle(null)
+    val latestLightIntensityLog = viewModel.latestLightIntensityLog
     val snackbarHostState = LocalSnackbarHostState.current
 
     LaunchedEffect(Unit) {
@@ -767,10 +766,7 @@ private fun LightIntensity(
                 color = color,
                 shape = RoundedCornerShape(8.dp)
             )
-            .padding(
-                horizontal = 16.dp,
-                vertical = 8.dp
-            ),
+            .padding(16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
