@@ -61,7 +61,7 @@ fun DeviceSettingsScreen(
     ) {
         item {
             WateringSection(
-                isAutomated = viewModel.isAutomated,
+                isAutomated = viewModel.wateringConfig?.automated ?: false,
                 onAutomatedChange = viewModel::updateAutomatedSetting,
                 minSoilMoisture = wateringConfig.minSoilMoisturePercent,
                 onMinSoilMoistureChange = viewModel::updateMinSoilMoisture,
@@ -99,8 +99,8 @@ fun DeviceSettingsScreen(
 private fun WateringSection(
     isAutomated: Boolean,
     onAutomatedChange: (Boolean) -> Unit,
-    minSoilMoisture: Float,
-    onMinSoilMoistureChange: (Float) -> Unit,
+    minSoilMoisture: Double,
+    onMinSoilMoistureChange: (Double) -> Unit,
     wateringReminder: Boolean,
     onWateringReminderChange: (Boolean) -> Unit,
     wateringDurationMs: Int,
@@ -131,7 +131,7 @@ private fun WateringSection(
                 minSoilMoisture
             ),
             editTitle = "Ubah Minimum Kelembaban Tanah",
-            onSave = { onMinSoilMoistureChange(it.toFloat()) },
+            onSave = { onMinSoilMoistureChange(it.toDouble()) },
             desc = "%",
             keyboardType = KeyboardType.Number
         )

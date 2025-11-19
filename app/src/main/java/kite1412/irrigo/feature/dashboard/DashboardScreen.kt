@@ -477,7 +477,7 @@ private fun AutomatedWatering(
 @Composable
 private fun SoilMoisture(
     latest: SoilMoistureLog?,
-    minPercentage: Float?,
+    minPercentage: Double?,
     onMinSettingClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -505,7 +505,7 @@ private fun SoilMoisture(
             verticalAlignment = Alignment.CenterVertically
         ) {
             SoilMoistureIndicator(
-                min = minPercentage,
+                min = minPercentage?.toFloat(),
                 value = latest?.moisturePercent?.toFloat(),
                 modifier = Modifier.weight(4f)
             )

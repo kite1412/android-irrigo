@@ -1,7 +1,7 @@
 package kite1412.irrigo.model
 
 data class WateringConfig(
-    val minSoilMoisturePercent: Float, // 0 - 100%
+    val minSoilMoisturePercent: Double, // 0 - 100%
     val durationMs: Int,
     val automated: Boolean
 )

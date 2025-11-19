@@ -33,8 +33,6 @@ class DeviceSettingsViewModel @Inject constructor(
         .toRoute<DeviceSettingsRoute>()
         .highlightSettingOrdinal
         ?.let(Setting.entries::get)
-    var isAutomated by mutableStateOf(false)
-        private set
     var wateringReminder by mutableStateOf(true)
         private set
     var waterCapacityReminder by mutableStateOf(true)
@@ -47,7 +45,6 @@ class DeviceSettingsViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             val wConfig = wateringRepository.getConfig()
-            isAutomated = wConfig?.automated ?: false
             wateringReminder = context.getPreference(
                 key = BooleanPreferencesKey.WATERING_REMINDER_ENABLED,
                 defaultValue = true
@@ -78,7 +75,10 @@ class DeviceSettingsViewModel @Inject constructor(
     }
 
     fun updateAutomatedSetting(new: Boolean) {
-        isAutomated = new
+        wateringConfig = wateringConfig?.copy(
+            automated = new
+        )
+        updateWateringConfig()
     }
 
     fun updateWateringReminder(value: Boolean) {
@@ -101,7 +101,7 @@ class DeviceSettingsViewModel @Inject constructor(
         }
     }
 
-    fun updateMinSoilMoisture(value: Float) {
+    fun updateMinSoilMoisture(value: Double) {
         wateringConfig = wateringConfig?.copy(
             minSoilMoisturePercent = value
         )

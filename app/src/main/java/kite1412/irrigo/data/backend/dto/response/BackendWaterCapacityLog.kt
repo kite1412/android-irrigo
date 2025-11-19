@@ -1,6 +1,8 @@
 package kite1412.irrigo.data.backend.dto.response
 
+import kite1412.irrigo.model.Device
 import kite1412.irrigo.model.WaterCapacityLog
+import kite1412.irrigo.model.WaterContainer
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -17,15 +19,15 @@ data class BackendWaterCapacityLog(
     @SerialName("current_height_cm")
     val currentHeightCm: Double,
     @SerialName("current_litres")
-    val currentLitres: Double,
-    //TODO delete
-    @SerialName("water_containers")
-    val waterContainer: BackendWaterContainer
+    val currentLitres: Double
 )
 
 fun BackendWaterCapacityLog.asModel() = WaterCapacityLog(
     id = id,
-    waterContainer = waterContainer.asModel(),
+    waterContainer = WaterContainer(
+        device = Device(1, ""),
+        heightCm = 0.0
+    ),
     timestamp = createdAt,
     currentHeightCm = currentHeightCm,
     currentLitres = currentLitres

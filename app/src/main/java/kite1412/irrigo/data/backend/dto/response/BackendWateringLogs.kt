@@ -1,29 +1,30 @@
 package kite1412.irrigo.data.backend.dto.response
 
 import kite1412.irrigo.model.Device
-import kite1412.irrigo.model.SoilMoistureLog
+import kite1412.irrigo.model.WateringLog
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.time.Instant
 
 @Serializable
-data class BackendSoilMoistureLog(
+data class BackendWateringLogs(
     val id: Int,
     @SerialName("device_id")
     val deviceId: Int,
-    @SerialName("moist_value")
-    val moistValue: Double,
+    @SerialName("duration_ms")
+    val durationMs: Int,
+    val manual: Boolean,
     @SerialName("created_at")
     @Contextual
-    val createdAt: Instant,
-    @SerialName("moisture_percentage")
-    val moisturePercentage: Double
+    val createdAt: Instant
 )
 
-fun BackendSoilMoistureLog.asModel() = SoilMoistureLog(
+fun BackendWateringLogs.asModel() = WateringLog(
     id = id,
     device = Device(1, ""),
-    moisturePercent = moisturePercentage,
-    timestamp = createdAt
+    timestamp = createdAt,
+    durationMs = durationMs,
+    waterVolumeLiters = 0.0,
+    manual = manual
 )

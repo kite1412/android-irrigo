@@ -30,7 +30,7 @@ class MockWateringRepository @Inject constructor() : WateringRepository {
             }
         }
 
-    override fun getWateringLogs(deviceId: Int): List<WateringLog> =
+    override suspend fun getWateringLogs(deviceId: Int): List<WateringLog> =
         List(100) {
             WateringLog(
                 id = it + 1,
@@ -43,7 +43,7 @@ class MockWateringRepository @Inject constructor() : WateringRepository {
         }
 
     override suspend fun getConfig(): WateringConfig? = WateringConfig(
-        minSoilMoisturePercent = 40f,
+        minSoilMoisturePercent = 40.0,
         durationMs = 2000,
         automated = true
     )
