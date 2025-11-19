@@ -48,9 +48,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -59,15 +62,21 @@ import kite1412.irrigo.designsystem.theme.DarkGray
 import kite1412.irrigo.designsystem.theme.DarkPastelBlue
 import kite1412.irrigo.designsystem.theme.Gray
 import kite1412.irrigo.designsystem.theme.LightPastelBlue
+import kite1412.irrigo.designsystem.theme.Orange
 import kite1412.irrigo.designsystem.theme.Red
+import kite1412.irrigo.designsystem.theme.Yellow
 import kite1412.irrigo.designsystem.theme.bodyExtraSmall
 import kite1412.irrigo.designsystem.util.IrrigoIcon
+import kite1412.irrigo.feature.dashboard.util.DashboardUiEvent
 import kite1412.irrigo.feature.dashboard.util.getWaterLevelPercentString
+import kite1412.irrigo.model.LightIntensityLog
+import kite1412.irrigo.model.LightIntensityStatus
 import kite1412.irrigo.model.SoilMoistureLog
 import kite1412.irrigo.model.WaterCapacityLog
 import kite1412.irrigo.model.WaterContainer
 import kite1412.irrigo.model.WateringLog
 import kite1412.irrigo.ui.component.DeviceSelect
+import kite1412.irrigo.ui.compositionlocal.LocalSnackbarHostState
 import kite1412.irrigo.util.getLocalInstantInfo
 import kotlinx.coroutines.delay
 import kotlin.math.max
@@ -86,7 +95,17 @@ fun DashboardScreen(
     val latestWateringLogs = viewModel.latestWateringLogs
     val latestSoilMoistureLog by viewModel.latestSoilMoistureLog.collectAsStateWithLifecycle(null)
     val wateringConfig = viewModel.wateringConfig
+    val latestLightIntensityLog by viewModel.latestLightIntensityLog.collectAsStateWithLifecycle(null)
+    val snackbarHostState = LocalSnackbarHostState.current
 
+    LaunchedEffect(Unit) {
+        viewModel.uiEvent.collect {
+            when (it) {
+                is DashboardUiEvent.ShowSnackbar -> snackbarHostState
+                    .showSnackbar(it.message)
+            }
+        }
+    }
     AnimatedContent(
         targetState = device,
         modifier = modifier
@@ -112,8 +131,9 @@ fun DashboardScreen(
                         waterContainer = waterContainer,
                         latestWaterCapacityLog = latestWaterCapacityLog,
                         latestWateringLogs = latestWateringLogs,
+                        latestLightIntensityLog = latestLightIntensityLog,
                         onMoreWateringLog = onMoreWateringLogClick,
-                        onWateringClick = {},
+                        onWateringClick = viewModel::sendWateringSignal,
                         onAutomatedWateringClick = onAutomatedWateringSettingClick
                     )
                     SoilMoisture(
@@ -131,6 +151,7 @@ fun DashboardScreen(
 private fun DeviceControlSection(
     waterContainer: WaterContainer?,
     latestWaterCapacityLog: WaterCapacityLog?,
+    latestLightIntensityLog: LightIntensityLog?,
     latestWateringLogs: List<WateringLog>?,
     onMoreWateringLog: () -> Unit,
     onWateringClick: () -> Unit,
@@ -172,6 +193,9 @@ private fun DeviceControlSection(
     }
     AutomatedWatering(
         onClick = onAutomatedWateringClick
+    )
+    LightIntensity(
+        latest = latestLightIntensityLog
     )
 }
 
@@ -718,6 +742,73 @@ private fun SoilMoistureStatus(
         Text(
             text = status,
             style = textStyle
+        )
+    }
+}
+
+@Composable
+private fun LightIntensity(
+    latest: LightIntensityLog?,
+    modifier: Modifier = Modifier
+) {
+    val color by animateColorAsState(
+        when (latest?.status) {
+            LightIntensityStatus.NORMAL -> Orange
+            LightIntensityStatus.HIGH -> Yellow
+            else -> Gray
+        }
+    )
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .border(
+                width = 2.dp,
+                color = color,
+                shape = RoundedCornerShape(8.dp)
+            )
+            .padding(
+                horizontal = 16.dp,
+                vertical = 8.dp
+            ),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column {
+            Text(
+                text = buildAnnotatedString {
+                    if (latest != null) append("Intensitas Cahaya: ")
+                    withStyle(
+                        style = SpanStyle(
+                            color = color,
+                            fontWeight = FontWeight.Bold,
+                            fontStyle = if (latest != null) FontStyle.Normal
+                                else FontStyle.Italic
+                        )
+                    ) {
+                        append(
+                            when (latest?.status) {
+                                LightIntensityStatus.NORMAL -> "Normal"
+                                LightIntensityStatus.LOW -> "Rendah"
+                                LightIntensityStatus.HIGH -> "Tinggi"
+                                else -> "Mencari data..."
+                            }
+                        )
+                    }
+                }
+            )
+            Text(
+                text = if (latest != null) "${latest.lux} Lux" else "",
+                style = MaterialTheme.typography.bodySmall.copy(
+                    fontStyle = FontStyle.Italic
+                )
+            )
+        }
+        Icon(
+            painter = painterResource(IrrigoIcon.sun),
+            contentDescription = null,
+            modifier = Modifier.size(40.dp),
+            tint = color
         )
     }
 }

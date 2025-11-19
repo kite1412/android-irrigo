@@ -90,7 +90,7 @@ abstract class BackendClient {
         val res = responseOrThrow(
             client.post {
                 url(path)
-                body.let(::setBody)
+                body?.let(::setBody)
             }.body<ApiResponse<R>>()
         )
 
@@ -117,7 +117,7 @@ abstract class BackendClient {
         val res = responseOrThrow(
             client.patch {
                 url(path)
-                body.let(::setBody)
+                body?.let(::setBody)
             }.body<ApiResponse<R>>()
         )
 

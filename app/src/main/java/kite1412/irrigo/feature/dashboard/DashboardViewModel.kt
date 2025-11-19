@@ -11,11 +11,13 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kite1412.irrigo.domain.DeviceRepository
+import kite1412.irrigo.domain.LightIntensityLogRepository
 import kite1412.irrigo.domain.SoilMoistureLogRepository
 import kite1412.irrigo.domain.WaterCapacityRepository
 import kite1412.irrigo.domain.WateringRepository
 import kite1412.irrigo.feature.dashboard.util.DashboardUiEvent
 import kite1412.irrigo.model.Device
+import kite1412.irrigo.model.LightIntensityLog
 import kite1412.irrigo.model.SoilMoistureLog
 import kite1412.irrigo.model.WaterCapacityLog
 import kite1412.irrigo.model.WaterContainer
@@ -37,7 +39,8 @@ class DashboardViewModel @Inject constructor(
     private val deviceRepository: DeviceRepository,
     private val waterCapacityRepository: WaterCapacityRepository,
     private val wateringRepository: WateringRepository,
-    private val soilMoistureLogRepository: SoilMoistureLogRepository
+    private val soilMoistureLogRepository: SoilMoistureLogRepository,
+    private val lightIntensityLogRepository: LightIntensityLogRepository
 ) : ViewModel() {
     var device by mutableStateOf<Device?>(null)
         private set
@@ -47,8 +50,11 @@ class DashboardViewModel @Inject constructor(
         private set
     var latestSoilMoistureLog = emptyFlow<SoilMoistureLog>()
         private set
+    var latestLightIntensityLog = emptyFlow<LightIntensityLog>()
+        private set
     val latestWateringLogs = mutableStateListOf<WateringLog>()
     var wateringConfig by mutableStateOf<WateringConfig?>(null)
+
     private val _uiEvent = MutableSharedFlow<DashboardUiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
 
@@ -70,16 +76,6 @@ class DashboardViewModel @Inject constructor(
         }
     }
 
-    fun onDeviceChange(device: Device) {
-        viewModelScope.launch {
-            updateDeviceInfo(device)
-            context.updatePreferences(
-                key = IntPreferencesKey.SELECTED_DEVICE_ID,
-                value = device.id
-            )
-        }
-    }
-
     private fun updateDeviceInfo(newDevice: Device) {
         viewModelScope.launch {
             this@DashboardViewModel.device = newDevice
@@ -92,12 +88,33 @@ class DashboardViewModel @Inject constructor(
                         "deviceId: ${newDevice.id}, latest water cap log: ${it.currentHeightCm}cm"
                     )
                 }
+            latestLightIntensityLog = lightIntensityLogRepository
+                .getLatestLightIntensityLog(newDevice.id)
             latestWateringLogs.clear()
             latestWateringLogs.addAll(
                 wateringRepository.getWateringLogs(newDevice.id)
                     .sortedByDescending { it.timestamp }
             )
             latestSoilMoistureLog = soilMoistureLogRepository.getLatestSoilMoistureLog(newDevice.id)
+        }
+    }
+
+    fun onDeviceChange(device: Device) {
+        viewModelScope.launch {
+            updateDeviceInfo(device)
+            context.updatePreferences(
+                key = IntPreferencesKey.SELECTED_DEVICE_ID,
+                value = device.id
+            )
+        }
+    }
+
+    fun sendWateringSignal() {
+        viewModelScope.launch {
+            device?.id?.let {
+                deviceRepository.sendWateringSignal(it)
+                _uiEvent.emit(DashboardUiEvent.ShowSnackbar("Penyiraman dilakukan"))
+            }
         }
     }
 }

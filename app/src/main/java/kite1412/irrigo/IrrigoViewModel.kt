@@ -1,5 +1,6 @@
 package kite1412.irrigo
 
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -22,4 +23,5 @@ class IrrigoViewModel @Inject constructor() : ViewModel() {
             appBarSubtitle = null
         }
     }
+    val snackbarHostState = SnackbarHostState()
 }
