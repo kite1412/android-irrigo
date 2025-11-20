@@ -21,9 +21,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
@@ -55,6 +57,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.Popup
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import kite1412.irrigo.designsystem.theme.DarkGray
@@ -67,6 +70,7 @@ import kite1412.irrigo.designsystem.theme.Yellow
 import kite1412.irrigo.designsystem.theme.bodyExtraSmall
 import kite1412.irrigo.designsystem.util.IrrigoIcon
 import kite1412.irrigo.feature.dashboard.util.DashboardUiEvent
+import kite1412.irrigo.feature.dashboard.util.ServerConnection
 import kite1412.irrigo.feature.dashboard.util.getWaterLevelPercentString
 import kite1412.irrigo.model.LightIntensityLog
 import kite1412.irrigo.model.LightIntensityStatus
@@ -75,6 +79,7 @@ import kite1412.irrigo.model.WaterCapacityLog
 import kite1412.irrigo.model.WaterContainer
 import kite1412.irrigo.model.WateringLog
 import kite1412.irrigo.ui.component.DeviceSelect
+import kite1412.irrigo.ui.compositionlocal.LocalScaffoldBarsController
 import kite1412.irrigo.ui.compositionlocal.LocalSnackbarHostState
 import kite1412.irrigo.util.getLocalInstantInfo
 import kotlinx.coroutines.delay
@@ -96,6 +101,8 @@ fun DashboardScreen(
     val wateringConfig = viewModel.wateringConfig
     val latestLightIntensityLog = viewModel.latestLightIntensityLog
     val snackbarHostState = LocalSnackbarHostState.current
+    val scaffoldBarsController = LocalScaffoldBarsController.current
+    val serverConnection = viewModel.serverConnection
 
     LaunchedEffect(Unit) {
         viewModel.uiEvent.collect {
@@ -104,6 +111,10 @@ fun DashboardScreen(
                     .showSnackbar(it.message)
             }
         }
+    }
+    LaunchedEffect(serverConnection) {
+        if (serverConnection == ServerConnection.CONNECTED) scaffoldBarsController.showAll()
+        else scaffoldBarsController.hideAll()
     }
     AnimatedContent(
         targetState = device,
@@ -142,6 +153,117 @@ fun DashboardScreen(
                     )
                 }
             }
+        }
+    }
+    if (serverConnection != ServerConnection.CONNECTED) Dialog(
+        onDismissRequest = {}
+    ) {
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(8.dp))
+                .background(MaterialTheme.colorScheme.background)
+                .padding(16.dp)
+        ) {
+            if (serverConnection == ServerConnection.CONNECTING) ConnectingToServer(
+                modifier = Modifier.widthIn(
+                    max = 160.dp
+                )
+            ) else if (serverConnection == ServerConnection.FAILED) ReattemptConnection(
+                onClick = viewModel::connectToServer
+            )
+        }
+    }
+}
+
+@Composable
+private fun ConnectingToServer(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        CircularProgressIndicator(
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(48.dp),
+            trackColor = Gray
+        )
+        Text(
+            text = "Menghubungkan ke server",
+            style = MaterialTheme.typography.bodySmall.copy(
+                fontStyle = FontStyle.Italic,
+                color = MaterialTheme.colorScheme.onBackground,
+                textAlign = TextAlign.Center
+            )
+        )
+    }
+}
+
+@Composable
+private fun ReattemptConnection(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            val color = Red
+            val textStyle = MaterialTheme.typography.bodyLarge.copy(
+                fontWeight = FontWeight.Bold,
+                color = color
+            )
+
+            Icon(
+                painter = painterResource(IrrigoIcon.noServer),
+                contentDescription = null,
+                modifier = Modifier.size((textStyle.fontSize.value * 1.5f).dp),
+                tint = color
+            )
+            Text(
+                text = "Koneksi Gagal",
+                style = textStyle
+            )
+        }
+        Text(
+            text = "Gagal terhubung ke server, pastikan koneksi internet aktif."
+        )
+        Row(
+            modifier = Modifier
+                .align(Alignment.End)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primary)
+                .clickable(
+                    indication = null,
+                    interactionSource = null,
+                    onClick = onClick
+                )
+                .padding(
+                    vertical = 8.dp,
+                    horizontal = 16.dp
+                ),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            val color = MaterialTheme.colorScheme.onBackground
+            val textStyle = MaterialTheme.typography.bodySmall.copy(
+                color = color,
+                fontWeight = FontWeight.Bold
+            )
+
+            Text(
+                text = "Coba Lagi",
+                style = textStyle
+            )
+            Icon(
+                painter = painterResource(IrrigoIcon.retry),
+                contentDescription = "retry",
+                modifier = Modifier.size((textStyle.fontSize.value * 1.5f).dp),
+                tint = color
+            )
         }
     }
 }

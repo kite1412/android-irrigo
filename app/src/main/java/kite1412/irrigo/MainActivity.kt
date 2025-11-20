@@ -28,6 +28,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kite1412.irrigo.designsystem.theme.IrrigoTheme
 import kite1412.irrigo.ui.compositionlocal.LocalAppBarUpdater
+import kite1412.irrigo.ui.compositionlocal.LocalScaffoldBarsController
 import kite1412.irrigo.ui.compositionlocal.LocalSnackbarHostState
 
 @AndroidEntryPoint
@@ -45,9 +46,12 @@ class MainActivity : ComponentActivity() {
                     ) {
                         CompositionLocalProvider(
                             LocalAppBarUpdater provides viewModel.appBarUpdater,
-                            LocalSnackbarHostState provides viewModel.snackbarHostState
+                            LocalSnackbarHostState provides viewModel.snackbarHostState,
+                            LocalScaffoldBarsController provides viewModel.scaffoldBarsController
                         ) {
                             IrrigoNavHost(
+                                showAppBar = viewModel.showAppBar,
+                                showNavBar = viewModel.showNavBar,
                                 modifier = Modifier
                                     .padding(innerPadding)
                                     .padding(

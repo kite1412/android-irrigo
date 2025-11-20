@@ -17,4 +17,6 @@ object IrrigoIcon {
     val arrowRightLine = R.drawable.arrow_right_line
     val plantWater = R.drawable.plant_water
     val sun = R.drawable.sun
+    val noServer = R.drawable.no_server
+    val retry = R.drawable.retry
 }

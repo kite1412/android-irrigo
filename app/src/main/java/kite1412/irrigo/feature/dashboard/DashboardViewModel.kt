@@ -15,6 +15,7 @@ import kite1412.irrigo.domain.SoilMoistureLogRepository
 import kite1412.irrigo.domain.WaterCapacityRepository
 import kite1412.irrigo.domain.WateringRepository
 import kite1412.irrigo.feature.dashboard.util.DashboardUiEvent
+import kite1412.irrigo.feature.dashboard.util.ServerConnection
 import kite1412.irrigo.model.Device
 import kite1412.irrigo.model.LightIntensityLog
 import kite1412.irrigo.model.SoilMoistureLog
@@ -50,8 +51,11 @@ class DashboardViewModel @Inject constructor(
         private set
     var latestLightIntensityLog by mutableStateOf<LightIntensityLog?>(null)
         private set
-    val latestWateringLogs = mutableStateListOf<WateringLog>()
     var wateringConfig by mutableStateOf<WateringConfig?>(null)
+        private set
+    var serverConnection by mutableStateOf(ServerConnection.CONNECTING)
+        private set
+    val latestWateringLogs = mutableStateListOf<WateringLog>()
 
     private val _uiEvent = MutableSharedFlow<DashboardUiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
@@ -60,24 +64,7 @@ class DashboardViewModel @Inject constructor(
     val realtimeJobs = mutableListOf<Job>()
 
     init {
-        viewModelScope.launch {
-            val devices = deviceRepository.getDevices()
-            this@DashboardViewModel.devices.addAll(devices)
-            val device = devices.firstOrNull {
-                it.id == (context
-                    .getPreference(IntPreferencesKey.SELECTED_DEVICE_ID, 1) ?: 1)
-            } ?: devices.firstOrNull()?.also {
-                context.updatePreferences(
-                    key = IntPreferencesKey.SELECTED_DEVICE_ID,
-                    value = it.id
-                )
-            }
-            wateringConfig = wateringRepository.getConfig()
-            if (device == null) {
-                _uiEvent.emit(DashboardUiEvent.ShowSnackbar("Device not found"))
-                return@launch
-            } else updateDeviceInfo(newDevice = device)
-        }
+        connectToServer()
     }
 
     private fun updateDeviceInfo(newDevice: Device) {
@@ -140,6 +127,35 @@ class DashboardViewModel @Inject constructor(
                         }
                 }
             )
+        }
+    }
+
+    fun connectToServer() {
+        viewModelScope.launch {
+            serverConnection = ServerConnection.CONNECTING
+            var devices: List<Device>
+            try {
+                devices = deviceRepository.getDevices()
+            } catch (_: Exception) {
+                serverConnection = ServerConnection.FAILED
+                return@launch
+            }
+            this@DashboardViewModel.devices.addAll(devices)
+            val device = devices.firstOrNull {
+                it.id == (context
+                    .getPreference(IntPreferencesKey.SELECTED_DEVICE_ID, 1) ?: 1)
+            } ?: devices.firstOrNull()?.also {
+                context.updatePreferences(
+                    key = IntPreferencesKey.SELECTED_DEVICE_ID,
+                    value = it.id
+                )
+            }
+            wateringConfig = wateringRepository.getConfig()
+            if (device == null) {
+                _uiEvent.emit(DashboardUiEvent.ShowSnackbar("Device not found"))
+                return@launch
+            } else updateDeviceInfo(newDevice = device)
+            serverConnection = ServerConnection.CONNECTED
         }
     }
 

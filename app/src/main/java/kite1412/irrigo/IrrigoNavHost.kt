@@ -1,5 +1,10 @@
 package kite1412.irrigo
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,6 +30,8 @@ import kite1412.irrigo.util.Destination
 
 @Composable
 fun IrrigoNavHost(
+    showAppBar: Boolean,
+    showNavBar: Boolean,
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
     appState: IrrigoAppState = rememberIrrigoAppState(navController),
@@ -36,6 +43,8 @@ fun IrrigoNavHost(
         selectedDestination = currentDestination,
         destinations = appState.destinations,
         onDestinationSelected = appState::navigateTo,
+        showAppBar = showAppBar,
+        showNavBar = showNavBar,
         modifier = modifier,
         appBarSubtitle = appBarSubtitle
     ) {
@@ -66,6 +75,8 @@ private fun Scaffold(
     selectedDestination: Destination?,
     destinations: List<Destination>,
     onDestinationSelected: (Destination) -> Unit,
+    showAppBar: Boolean,
+    showNavBar: Boolean,
     modifier: Modifier = Modifier,
     appBarSubtitle: String? = null,
     content: @Composable () -> Unit
@@ -77,17 +88,27 @@ private fun Scaffold(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(32.dp)
         ) {
-            IrrigoAppBar(
-                title = selectedDestination?.name ?: "",
-                subtitle = appBarSubtitle
-            )
+            AnimatedVisibility(
+                visible = showAppBar
+            ) {
+                IrrigoAppBar(
+                    title = selectedDestination?.name ?: "",
+                    subtitle = appBarSubtitle
+                )
+            }
             content()
         }
-        if (destinations.isNotEmpty()) IrrigoNavBar(
-            destinations = destinations,
-            onDestinationSelected = onDestinationSelected,
-            selectedDestination = selectedDestination ?: destinations.first(),
-            modifier = Modifier.align(Alignment.BottomEnd)
-        )
+        if (destinations.isNotEmpty()) AnimatedVisibility(
+            visible = showNavBar,
+            modifier = Modifier.align(Alignment.BottomEnd),
+            enter = slideInVertically { -it } + fadeIn(),
+            exit = slideOutVertically { it } + fadeOut()
+        ) {
+            IrrigoNavBar(
+                destinations = destinations,
+                onDestinationSelected = onDestinationSelected,
+                selectedDestination = selectedDestination ?: destinations.first()
+            )
+        }
     }
 }
