@@ -5,4 +5,5 @@ import kotlinx.coroutines.flow.Flow
 
 interface LightIntensityLogRepository {
     fun getLatestLightIntensityLog(deviceId: Int): Flow<LightIntensityLog>
+    suspend fun getLightIntensityLogs(deviceId: Int): List<LightIntensityLog>
 }

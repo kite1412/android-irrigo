@@ -55,6 +55,7 @@ fun WaterCapacityLog(jsonObject: JsonObject) = WaterCapacityLog(
 )
 
 fun LightIntensityLog(jsonObject: JsonObject) = LightIntensityLog(
+    id = jsonObject.getOrThrow("id").int,
     device = Device(
         id = jsonObject.getOrThrow("device_id").int,
         name = ""

@@ -90,6 +90,9 @@ class DashboardViewModel @Inject constructor(
             waterContainer = deviceRepository.getWaterContainer(newDevice.id)
             realtimeJobs.add(
                 launch {
+                    latestWaterCapacityLog = waterCapacityRepository
+                        .getWaterCapacityLogs(newDevice.id)
+                        .maxByOrNull { it.timestamp }
                     waterCapacityRepository
                         .getLatestWaterCapacityLogFlow(newDevice.id)
                         .collect {
@@ -99,6 +102,9 @@ class DashboardViewModel @Inject constructor(
             )
             realtimeJobs.add(
                 launch {
+                    latestLightIntensityLog = lightIntensityLogRepository
+                        .getLightIntensityLogs(newDevice.id)
+                        .maxByOrNull { it.timestamp }
                     lightIntensityLogRepository
                         .getLatestLightIntensityLog(newDevice.id)
                         .collect {
@@ -113,6 +119,21 @@ class DashboardViewModel @Inject constructor(
             )
             realtimeJobs.add(
                 launch {
+                    wateringRepository
+                        .getLatestWateringLog(newDevice.id)
+                        .collect {
+                            latestWateringLogs.add(
+                                index = 0,
+                                element = it
+                            )
+                        }
+                }
+            )
+            realtimeJobs.add(
+                launch {
+                    latestSoilMoistureLog = soilMoistureLogRepository
+                        .getSoilMoistureLogs(newDevice.id)
+                        .maxByOrNull { it.timestamp }
                     soilMoistureLogRepository.getLatestSoilMoistureLog(newDevice.id)
                         .collect {
                             latestSoilMoistureLog = it
