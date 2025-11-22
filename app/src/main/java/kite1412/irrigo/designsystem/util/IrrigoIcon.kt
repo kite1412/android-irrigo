@@ -19,4 +19,6 @@ object IrrigoIcon {
     val sun = R.drawable.sun
     val noServer = R.drawable.no_server
     val retry = R.drawable.retry
+    val device = R.drawable.device
+    val x = R.drawable.x
 }

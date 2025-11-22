@@ -15,6 +15,7 @@ import kite1412.irrigo.domain.SoilMoistureLogRepository
 import kite1412.irrigo.domain.WaterCapacityRepository
 import kite1412.irrigo.domain.WateringRepository
 import kite1412.irrigo.feature.dashboard.util.DashboardUiEvent
+import kite1412.irrigo.feature.dashboard.util.DeviceEdit
 import kite1412.irrigo.feature.dashboard.util.ServerConnection
 import kite1412.irrigo.model.Device
 import kite1412.irrigo.model.LightIntensityLog
@@ -41,6 +42,7 @@ class DashboardViewModel @Inject constructor(
     private val soilMoistureLogRepository: SoilMoistureLogRepository,
     private val lightIntensityLogRepository: LightIntensityLogRepository
 ) : ViewModel() {
+    private val realtimeJobs = mutableListOf<Job>()
     var device by mutableStateOf<Device?>(null)
         private set
     var latestWaterCapacityLog by mutableStateOf<WaterCapacityLog?>(null)
@@ -55,13 +57,17 @@ class DashboardViewModel @Inject constructor(
         private set
     var serverConnection by mutableStateOf(ServerConnection.CONNECTING)
         private set
+    var showDeviceManagementDialog by mutableStateOf(false)
+    var selectedDeviceManagementMode by mutableStateOf<Device?>(null)
+        private set
+    var selectedWaterContainerManagementMode by mutableStateOf<WaterContainer?>(null)
+        private set
     val latestWateringLogs = mutableStateListOf<WateringLog>()
 
     private val _uiEvent = MutableSharedFlow<DashboardUiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
 
     val devices = mutableStateListOf<Device>()
-    val realtimeJobs = mutableListOf<Job>()
 
     init {
         connectToServer()
@@ -154,7 +160,10 @@ class DashboardViewModel @Inject constructor(
             if (device == null) {
                 _uiEvent.emit(DashboardUiEvent.ShowSnackbar("Device not found"))
                 return@launch
-            } else updateDeviceInfo(newDevice = device)
+            } else {
+                selectedDeviceManagementMode = device
+                updateDeviceInfo(newDevice = device)
+            }
             serverConnection = ServerConnection.CONNECTED
         }
     }
@@ -175,6 +184,39 @@ class DashboardViewModel @Inject constructor(
                 deviceRepository.sendWateringSignal(it)
                 _uiEvent.emit(DashboardUiEvent.ShowSnackbar("Penyiraman dilakukan"))
             }
+        }
+    }
+
+    fun onDeviceManagementModeChange(device: Device) {
+        if (device == this.device) {
+            selectedWaterContainerManagementMode = waterContainer
+            selectedDeviceManagementMode = device
+        } else {
+            viewModelScope.launch {
+                selectedWaterContainerManagementMode =
+                    deviceRepository.getWaterContainer(device.id)
+                selectedDeviceManagementMode = device
+            }
+        }
+    }
+
+    fun onSaveDevice(edit: DeviceEdit) {
+        viewModelScope.launch {
+            if (edit.isNew) {
+                val device = deviceRepository.addDevice(edit.device)
+                if (device != null) {
+                    deviceRepository.addWaterContainer(
+                        waterContainer = edit.waterContainer.copy(
+                            device = device
+                        )
+                    )
+                    devices.add(device)
+                }
+            } else {
+                deviceRepository.editDevice(edit.device)
+                deviceRepository.editWaterContainer(edit.waterContainer)
+            }
+            showDeviceManagementDialog = false
         }
     }
 }

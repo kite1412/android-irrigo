@@ -1,6 +1,7 @@
 package kite1412.irrigo.feature.dashboard
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
@@ -36,9 +37,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -54,12 +57,15 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.Popup
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import kite1412.irrigo.designsystem.component.Button
+import kite1412.irrigo.designsystem.component.TextField
 import kite1412.irrigo.designsystem.theme.DarkGray
 import kite1412.irrigo.designsystem.theme.DarkPastelBlue
 import kite1412.irrigo.designsystem.theme.Gray
@@ -70,8 +76,10 @@ import kite1412.irrigo.designsystem.theme.Yellow
 import kite1412.irrigo.designsystem.theme.bodyExtraSmall
 import kite1412.irrigo.designsystem.util.IrrigoIcon
 import kite1412.irrigo.feature.dashboard.util.DashboardUiEvent
+import kite1412.irrigo.feature.dashboard.util.DeviceEdit
 import kite1412.irrigo.feature.dashboard.util.ServerConnection
 import kite1412.irrigo.feature.dashboard.util.getWaterLevelPercentString
+import kite1412.irrigo.model.Device
 import kite1412.irrigo.model.LightIntensityLog
 import kite1412.irrigo.model.LightIntensityStatus
 import kite1412.irrigo.model.SoilMoistureLog
@@ -103,6 +111,9 @@ fun DashboardScreen(
     val snackbarHostState = LocalSnackbarHostState.current
     val scaffoldBarsController = LocalScaffoldBarsController.current
     val serverConnection = viewModel.serverConnection
+    val devices = viewModel.devices
+    val selectedDeviceManagementMode = viewModel.selectedDeviceManagementMode
+    val selectedWaterContainerManagementMode = viewModel.selectedWaterContainerManagementMode
 
     LaunchedEffect(Unit) {
         viewModel.uiEvent.collect {
@@ -124,11 +135,29 @@ fun DashboardScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
-                DeviceSelect(
-                    selectedDevice = it,
-                    devices = viewModel.devices,
-                    onDeviceChange = viewModel::onDeviceChange
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    DeviceSelect(
+                        selectedDevice = it,
+                        devices = devices,
+                        onDeviceChange = viewModel::onDeviceChange,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Icon(
+                        painter = painterResource(IrrigoIcon.device),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(MaterialTheme.colorScheme.secondary)
+                            .clickable {
+                                viewModel.showDeviceManagementDialog = true
+                                viewModel.onDeviceManagementModeChange(it)
+                            }
+                            .padding(8.dp)
+                    )
+                }
             }
             item {
                 Column(
@@ -155,8 +184,25 @@ fun DashboardScreen(
             }
         }
     }
+    if (
+        viewModel.showDeviceManagementDialog
+        && device != null
+        && selectedDeviceManagementMode != null
+        && selectedWaterContainerManagementMode != null
+    ) Dialog(
+        onDismissRequest = { viewModel.showDeviceManagementDialog }
+    ) {
+        DeviceManagement(
+            devices = devices,
+            selectedDevice = selectedDeviceManagementMode,
+            selectedWaterContainer = selectedWaterContainerManagementMode,
+            onDeviceChange = viewModel::onDeviceManagementModeChange,
+            onDismiss = { viewModel.showDeviceManagementDialog = false },
+            onSave = viewModel::onSaveDevice
+        )
+    }
     if (serverConnection != ServerConnection.CONNECTED) Dialog(
-        onDismissRequest = {}
+        onDismissRequest = {} // left empty
     ) {
         Box(
             modifier = Modifier
@@ -265,6 +311,184 @@ private fun ReattemptConnection(
                 tint = color
             )
         }
+    }
+}
+
+@Composable
+private fun DeviceManagement(
+    devices: List<Device>,
+    selectedDevice: Device,
+    selectedWaterContainer: WaterContainer,
+    onDeviceChange: (Device) -> Unit,
+    onDismiss: () -> Unit,
+    onSave: (device: DeviceEdit) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var addMode by rememberSaveable { mutableStateOf(false) }
+    var deviceName by rememberSaveable(selectedDevice) {
+        mutableStateOf(selectedDevice.name)
+    }
+    var deviceWaterCapacityHeightCm by rememberSaveable(selectedWaterContainer) {
+        mutableDoubleStateOf(selectedWaterContainer.heightCm)
+    }
+    var deviceWaterCapacityCapacityLitres by rememberSaveable(selectedWaterContainer) {
+        mutableDoubleStateOf(selectedWaterContainer.capacityLitres ?: 0.0)
+    }
+    val shape = RoundedCornerShape(16.dp)
+
+    LaunchedEffect(devices.size) {
+        if (devices.isEmpty()) addMode = true
+    }
+    LaunchedEffect(addMode) {
+        if (addMode) {
+            deviceName = ""
+            deviceWaterCapacityHeightCm = 0.0
+            deviceWaterCapacityCapacityLitres = 0.0
+        }
+    }
+    Column(
+        modifier = modifier
+            .clip(shape)
+            .background(
+                color = MaterialTheme.colorScheme.background
+            )
+            .border(
+                width = 2.dp,
+                color = MaterialTheme.colorScheme.onBackground,
+                shape = shape
+            )
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = "Manajemen Perangkat",
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            )
+            Icon(
+                painter = painterResource(IrrigoIcon.x),
+                contentDescription = "cancel",
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .clickable(
+                        onClick = onDismiss
+                    ),
+                tint = Red
+            )
+        }
+        AnimatedVisibility(
+            visible = !addMode
+        ) {
+            DeviceSelect(
+                selectedDevice = selectedDevice,
+                devices = devices,
+                onDeviceChange = onDeviceChange
+            )
+        }
+        DeviceManagementSection(
+            name = "Perangkat"
+        ) {
+            TextField(
+                value = deviceName,
+                onValueChange = { deviceName = it },
+                placeholder = "Nama perangkat"
+            )
+        }
+        DeviceManagementSection(
+            name = "Kapasitas Air"
+        ) {
+            TextField(
+                value = if (deviceWaterCapacityHeightCm == 0.0) ""
+                    else deviceWaterCapacityHeightCm.toString(),
+                onValueChange = {
+                    deviceWaterCapacityHeightCm = it.toDouble()
+                },
+                placeholder = "Tinggi (cm)",
+                keyboardType = KeyboardType.Decimal
+            )
+            TextField(
+                value = if (deviceWaterCapacityCapacityLitres == 0.0) ""
+                    else deviceWaterCapacityCapacityLitres.toString(),
+                onValueChange = {
+                    deviceWaterCapacityCapacityLitres = it.toDouble()
+                },
+                placeholder = "Volume (liter)",
+                keyboardType = KeyboardType.Decimal
+            )
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = if (addMode) "Batal" else "Tambah",
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .clickable {
+                        addMode = !addMode
+                    }
+                    .padding(
+                        horizontal = 16.dp,
+                        vertical = 6.dp
+                    )
+            )
+            Button(
+                text = "Simpan",
+                onClick = {
+                    val device = Device(
+                        id = if (addMode) 0 else selectedDevice.id,
+                        name = deviceName
+                    )
+
+                    onSave(
+                        DeviceEdit(
+                            isNew = addMode,
+                            device = device,
+                            waterContainer = WaterContainer(
+                                device = device,
+                                heightCm = deviceWaterCapacityHeightCm,
+                                capacityLitres = deviceWaterCapacityCapacityLitres
+                            )
+                        )
+                    )
+                },
+                enabled = deviceName.isNotEmpty()
+                        && deviceWaterCapacityHeightCm != 0.0
+                        && deviceWaterCapacityCapacityLitres != 0.0
+            )
+        }
+    }
+}
+
+@Composable
+private fun DeviceManagementSection(
+    name: String,
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = name,
+            style = MaterialTheme.typography.bodySmall.copy(
+                fontWeight = FontWeight.Bold
+            )
+        )
+        Column(
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            content = content
+        )
     }
 }
 

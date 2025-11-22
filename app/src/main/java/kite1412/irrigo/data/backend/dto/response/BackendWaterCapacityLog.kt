@@ -26,7 +26,8 @@ fun BackendWaterCapacityLog.asModel() = WaterCapacityLog(
     id = id,
     waterContainer = WaterContainer(
         device = Device(1, ""),
-        heightCm = 0.0
+        heightCm = 0.0,
+        capacityLitres = 0.0
     ),
     timestamp = createdAt,
     currentHeightCm = currentHeightCm,
