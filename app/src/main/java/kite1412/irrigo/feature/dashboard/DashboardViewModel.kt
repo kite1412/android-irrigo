@@ -60,11 +60,12 @@ class DashboardViewModel @Inject constructor(
         private set
     var serverConnection by mutableStateOf(ServerConnection.CONNECTING)
         private set
-    var showDeviceManagementDialog by mutableStateOf(false)
     var selectedDeviceManagementMode by mutableStateOf<Device?>(null)
         private set
     var selectedWaterContainerManagementMode by mutableStateOf<WaterContainer?>(null)
         private set
+    var showDeviceManagementDialog by mutableStateOf(false)
+    var showWateringWarningDialog by mutableStateOf(false)
     val latestWateringLogs = mutableStateListOf<WateringLog>()
 
     private val _uiEvent = MutableSharedFlow<DashboardUiEvent>()
@@ -192,7 +193,13 @@ class DashboardViewModel @Inject constructor(
     }
 
     fun sendWateringSignal() {
-        viewModelScope.launch {
+        if (
+            (latestSoilMoistureLog?.moisturePercent ?: 0.0) > (wateringConfig?.minSoilMoisturePercent ?: 0.0)
+            && !showWateringWarningDialog
+        ) {
+            showWateringWarningDialog = true
+        } else viewModelScope.launch {
+            showWateringWarningDialog = false
             device?.id?.let {
                 deviceRepository.sendWateringSignal(it)
                 _uiEvent.emit(DashboardUiEvent.ShowSnackbar("Penyiraman dilakukan"))

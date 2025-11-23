@@ -25,12 +25,15 @@ import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.BasicAlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -90,8 +93,10 @@ import kite1412.irrigo.ui.compositionlocal.LocalScaffoldBarsController
 import kite1412.irrigo.ui.compositionlocal.LocalSnackbarHostState
 import kite1412.irrigo.util.getLocalInstantInfo
 import kotlinx.coroutines.delay
+import java.text.DecimalFormat
 import kotlin.math.max
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
     onSoilMoistureSettingClick: () -> Unit,
@@ -199,6 +204,94 @@ fun DashboardScreen(
             onDismiss = { viewModel.showDeviceManagementDialog = false },
             onSave = viewModel::onSaveDevice
         )
+    }
+    if (viewModel.showWateringWarningDialog) BasicAlertDialog(
+        onDismissRequest = {
+            viewModel.showWateringWarningDialog = false
+        }
+    ) {
+        Column(
+            modifier = Modifier
+                .clip(RoundedCornerShape(16.dp))
+                .background(MaterialTheme.colorScheme.background)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text(
+                text = "Peringatan",
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontWeight = FontWeight.Bold
+                )
+            )
+            Text(
+                text = buildAnnotatedString {
+                    val appendBold: (String, Color) -> Unit = { t, c ->
+                        withStyle(
+                            style = SpanStyle(
+                                color = c,
+                                fontWeight = FontWeight.Bold
+                            )
+                        ) {
+                            append(t)
+                        }
+                    }
+                    val df = DecimalFormat("#.##")
+
+                    append("Kelembaban tanah sekarang ")
+                    latestSoilMoistureLog?.let {
+                        appendBold(
+                            "(${df.format(it.moisturePercent)}%)",
+                            MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                    append(" sudah di atas batas minimum ")
+                    wateringConfig?.minSoilMoisturePercent?.let {
+                        appendBold(
+                            "(${df.format(it)}%)",
+                            Red
+                        )
+                    }
+                    append(", tetap lakukan penyiraman?")
+                }
+            )
+            Row(
+                modifier = Modifier.align(Alignment.End),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                val textButtonModifier: (() -> Unit) -> Modifier = { onClick ->
+                    Modifier
+                        .clip(CircleShape)
+                        .clickable(onClick = onClick)
+                        .padding(
+                            vertical = 8.dp,
+                            horizontal = 16.dp
+                        )
+                }
+                val fontWeight = FontWeight.Bold
+
+                Text(
+                    text = "Batal",
+                    modifier = textButtonModifier {
+                        viewModel.showWateringWarningDialog = false
+                    },
+                    fontWeight = fontWeight
+                )
+                VerticalDivider(
+                    modifier = Modifier
+                        .height(16.dp)
+                        .clip(CircleShape),
+                    color = MaterialTheme.colorScheme.onBackground,
+                    thickness = 2.dp
+                )
+                Text(
+                    text = "Siram",
+                    modifier = textButtonModifier(viewModel::sendWateringSignal),
+                    fontWeight = fontWeight,
+                    color = Red
+                )
+            }
+        }
     }
     if (serverConnection != ServerConnection.CONNECTED) Dialog(
         onDismissRequest = {} // left empty
