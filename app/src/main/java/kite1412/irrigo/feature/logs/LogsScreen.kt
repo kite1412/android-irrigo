@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.FlowRowScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -65,6 +66,7 @@ import kite1412.irrigo.model.SoilMoistureLog
 import kite1412.irrigo.model.WaterCapacityLog
 import kite1412.irrigo.model.WateringLog
 import kite1412.irrigo.ui.component.DeviceSelect
+import kite1412.irrigo.ui.component.LoadingIndicator
 import kite1412.irrigo.ui.compositionlocal.LocalAppBarUpdater
 import kite1412.irrigo.util.getLocalInstantInfo
 import kite1412.irrigo.util.now
@@ -146,18 +148,20 @@ fun LogsScreen(
                 LogsGroup(
                     type = LogsGroupType.WATER_CAPACITY,
                     background = PastelBlue,
-                    onClick = {
-                        viewModel.updateSelectedLogsGroup(it)
+                    onClick = { type ->
+                        viewModel.updateSelectedLogsGroup(type)
                         appBarUpdater.setSubtitle("Kapasitas Air")
                     }
                 )
             }
-        } else if (fetchingLogs) Text(
-            text = "Mencari logs...",
-            style = LocalTextStyle.current.copy(
-                fontStyle = FontStyle.Italic
+        } else if (fetchingLogs) Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            LoadingIndicator(
+                message = "Mencari logs..."
             )
-        ) else Column(
+        } else Column(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             DeviceSelect(

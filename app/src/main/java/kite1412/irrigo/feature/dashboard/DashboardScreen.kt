@@ -22,11 +22,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
@@ -87,6 +85,7 @@ import kite1412.irrigo.model.WaterCapacityLog
 import kite1412.irrigo.model.WaterContainer
 import kite1412.irrigo.model.WateringLog
 import kite1412.irrigo.ui.component.DeviceSelect
+import kite1412.irrigo.ui.component.LoadingIndicator
 import kite1412.irrigo.ui.compositionlocal.LocalScaffoldBarsController
 import kite1412.irrigo.ui.compositionlocal.LocalSnackbarHostState
 import kite1412.irrigo.util.getLocalInstantInfo
@@ -210,11 +209,8 @@ fun DashboardScreen(
                 .background(MaterialTheme.colorScheme.background)
                 .padding(16.dp)
         ) {
-            if (serverConnection == ServerConnection.CONNECTING) ConnectingToServer(
-                modifier = Modifier.widthIn(
-                    max = 160.dp
-                )
-            ) else if (serverConnection == ServerConnection.FAILED) ReattemptConnection(
+            if (serverConnection == ServerConnection.CONNECTING) ConnectingToServer()
+            else if (serverConnection == ServerConnection.FAILED) ReattemptConnection(
                 onClick = viewModel::connectToServer
             )
         }
@@ -223,25 +219,10 @@ fun DashboardScreen(
 
 @Composable
 private fun ConnectingToServer(modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        CircularProgressIndicator(
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(48.dp),
-            trackColor = Gray
-        )
-        Text(
-            text = "Menghubungkan ke server",
-            style = MaterialTheme.typography.bodySmall.copy(
-                fontStyle = FontStyle.Italic,
-                color = MaterialTheme.colorScheme.onBackground,
-                textAlign = TextAlign.Center
-            )
-        )
-    }
+    LoadingIndicator(
+        message = "Menghubungkan ke server",
+        modifier = modifier
+    )
 }
 
 @Composable

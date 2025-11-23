@@ -215,6 +215,13 @@ class DashboardViewModel @Inject constructor(
             } else {
                 deviceRepository.editDevice(edit.device)
                 deviceRepository.editWaterContainer(edit.waterContainer)
+                devices
+                    .indexOfFirst { it.id == edit.device.id }
+                    .takeIf{ it != -1 }
+                    ?.let {
+                        devices[it] = edit.device
+                        device = edit.device
+                    }
             }
             showDeviceManagementDialog = false
         }
