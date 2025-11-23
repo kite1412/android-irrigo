@@ -24,12 +24,15 @@ import kite1412.irrigo.model.WaterCapacityLog
 import kite1412.irrigo.model.WaterContainer
 import kite1412.irrigo.model.WateringConfig
 import kite1412.irrigo.model.WateringLog
+import kite1412.irrigo.util.DoublePreferencesKey
 import kite1412.irrigo.util.IntPreferencesKey
+import kite1412.irrigo.util.dataStore
 import kite1412.irrigo.util.getPreference
 import kite1412.irrigo.util.updatePreferences
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -71,6 +74,16 @@ class DashboardViewModel @Inject constructor(
 
     init {
         connectToServer()
+        viewModelScope.launch {
+            context.dataStore.data
+                .collectLatest {
+                    it[DoublePreferencesKey.WATERING_MIN_SOIL_MOISTURE]?.let { minSoilMoisture ->
+                        wateringConfig = wateringConfig?.copy(
+                            minSoilMoisturePercent = minSoilMoisture
+                        )
+                    }
+                }
+        }
     }
 
     private fun updateDeviceInfo(newDevice: Device) {
