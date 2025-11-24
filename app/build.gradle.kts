@@ -90,6 +90,7 @@ dependencies {
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
 
     ksp(libs.hilt.compiler)
 

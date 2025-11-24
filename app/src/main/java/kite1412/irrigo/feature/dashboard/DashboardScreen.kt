@@ -190,9 +190,6 @@ fun DashboardScreen(
     }
     if (
         viewModel.showDeviceManagementDialog
-        && device != null
-        && selectedDeviceManagementMode != null
-        && selectedWaterContainerManagementMode != null
     ) Dialog(
         onDismissRequest = { viewModel.showDeviceManagementDialog }
     ) {
@@ -391,8 +388,8 @@ private fun ReattemptConnection(
 @Composable
 private fun DeviceManagement(
     devices: List<Device>,
-    selectedDevice: Device,
-    selectedWaterContainer: WaterContainer,
+    selectedDevice: Device?,
+    selectedWaterContainer: WaterContainer?,
     onDeviceChange: (Device) -> Unit,
     onDismiss: () -> Unit,
     onSave: (device: DeviceEdit) -> Unit,
@@ -400,13 +397,13 @@ private fun DeviceManagement(
 ) {
     var addMode by rememberSaveable { mutableStateOf(false) }
     var deviceName by rememberSaveable(selectedDevice) {
-        mutableStateOf(selectedDevice.name)
+        mutableStateOf(selectedDevice?.name ?: "")
     }
     var deviceWaterCapacityHeightCm by rememberSaveable(selectedWaterContainer) {
-        mutableDoubleStateOf(selectedWaterContainer.heightCm)
+        mutableDoubleStateOf(selectedWaterContainer?.heightCm ?: 0.0)
     }
     var deviceWaterCapacityCapacityLitres by rememberSaveable(selectedWaterContainer) {
-        mutableDoubleStateOf(selectedWaterContainer.capacityLitres ?: 0.0)
+        mutableDoubleStateOf(selectedWaterContainer?.capacityLitres ?: 0.0)
     }
     val shape = RoundedCornerShape(16.dp)
 
@@ -458,13 +455,15 @@ private fun DeviceManagement(
             )
         }
         AnimatedVisibility(
-            visible = !addMode
+            visible = !addMode && selectedDevice != null && devices.isNotEmpty()
         ) {
-            DeviceSelect(
-                selectedDevice = selectedDevice,
-                devices = devices,
-                onDeviceChange = onDeviceChange
-            )
+            selectedDevice?.let {
+                DeviceSelect(
+                    selectedDevice = it,
+                    devices = devices,
+                    onDeviceChange = onDeviceChange
+                )
+            }
         }
         DeviceManagementSection(
             name = "Perangkat"
@@ -519,13 +518,13 @@ private fun DeviceManagement(
                 text = "Simpan",
                 onClick = {
                     val device = Device(
-                        id = if (addMode) 0 else selectedDevice.id,
+                        id = if (addMode) 0 else selectedDevice?.id ?: 0,
                         name = deviceName
                     )
 
                     onSave(
                         DeviceEdit(
-                            isNew = addMode,
+                            isNew = addMode || selectedDevice == null,
                             device = device,
                             waterContainer = WaterContainer(
                                 device = device,

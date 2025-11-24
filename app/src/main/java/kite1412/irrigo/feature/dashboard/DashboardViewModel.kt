@@ -173,7 +173,7 @@ class DashboardViewModel @Inject constructor(
             wateringConfig = wateringRepository.getConfig()
             if (device == null) {
                 _uiEvent.emit(DashboardUiEvent.ShowSnackbar("Device not found"))
-                return@launch
+                showDeviceManagementDialog = true
             } else {
                 selectedDeviceManagementMode = device
                 updateDeviceInfo(newDevice = device)
@@ -231,6 +231,10 @@ class DashboardViewModel @Inject constructor(
                         )
                     )
                     devices.add(device)
+                    if (devices.size == 1) {
+                        selectedDeviceManagementMode = device
+                        updateDeviceInfo(device)
+                    }
                 }
             } else {
                 deviceRepository.editDevice(edit.device)
