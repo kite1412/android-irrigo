@@ -1,5 +1,10 @@
 package kite1412.irrigo.feature.dashboard
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -53,6 +58,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -64,6 +70,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.Popup
+import androidx.core.app.ActivityCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import kite1412.irrigo.designsystem.component.Button
 import kite1412.irrigo.designsystem.component.TextField
@@ -93,6 +100,7 @@ import kite1412.irrigo.ui.compositionlocal.LocalScaffoldBarsController
 import kite1412.irrigo.ui.compositionlocal.LocalSnackbarHostState
 import kite1412.irrigo.util.getLocalInstantInfo
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.text.DecimalFormat
 import kotlin.math.max
 
@@ -118,8 +126,21 @@ fun DashboardScreen(
     val devices = viewModel.devices
     val selectedDeviceManagementMode = viewModel.selectedDeviceManagementMode
     val selectedWaterContainerManagementMode = viewModel.selectedWaterContainerManagementMode
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) {}
+    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
+        launch {
+            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.TIRAMISU) {
+                if (
+                    ActivityCompat.checkSelfPermission(
+                        context, Manifest.permission.POST_NOTIFICATIONS
+                    ) != PackageManager.PERMISSION_GRANTED
+                ) permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
         viewModel.uiEvent.collect {
             when (it) {
                 is DashboardUiEvent.ShowSnackbar -> snackbarHostState
