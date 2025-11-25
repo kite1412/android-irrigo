@@ -7,7 +7,9 @@ import androidx.core.app.ActivityCompat
 import com.google.firebase.messaging.RemoteMessage
 import dagger.hilt.android.AndroidEntryPoint
 import kite1412.irrigo.data.backend.firebase.DeviceTokenRegister
+import kite1412.irrigo.notification.receiver.wateringActionPendingIntent
 import kite1412.irrigo.notification.sendReminderNotification
+import kite1412.irrigo.notification.util.NotificationAction
 import kite1412.irrigo.notification.util.ReminderType
 import kite1412.irrigo.util.BooleanPreferencesKey
 import kite1412.irrigo.util.getPreference
@@ -57,6 +59,15 @@ class IrrigoFirebaseMessagingService : _FirebaseMessagingService() {
                     ) ?: true
                     else -> true
                 }
+                val actions: List<NotificationAction> = when (type) {
+                    "soil_moisture_below_min" -> listOf(
+                        NotificationAction(
+                            name = "Siram",
+                            pendingIntent = wateringActionPendingIntent()
+                        )
+                    )
+                    else -> emptyList()
+                }
 
                 if (
                     push && ActivityCompat.checkSelfPermission(
@@ -69,7 +80,8 @@ class IrrigoFirebaseMessagingService : _FirebaseMessagingService() {
                         else -> ReminderType.DUMMY
                     },
                     title = title,
-                    content = content
+                    content = content,
+                    actions = actions
                 )
             }
         }

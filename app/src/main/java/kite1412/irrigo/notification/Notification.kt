@@ -12,6 +12,7 @@ import androidx.annotation.RequiresPermission
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import kite1412.irrigo.designsystem.util.IrrigoIcon
+import kite1412.irrigo.notification.util.NotificationAction
 import kite1412.irrigo.notification.util.ReminderType
 
 const val MAIN_ACTIVITY_NAME = "kite1412.irrigo.MainActivity"
@@ -20,7 +21,8 @@ const val MAIN_ACTIVITY_NAME = "kite1412.irrigo.MainActivity"
 fun Context.sendReminderNotification(
     reminderType: ReminderType,
     title: String,
-    content: String
+    content: String,
+    actions: List<NotificationAction> = emptyList()
 ) {
     NotificationManagerCompat.from(this)
         .notify(
@@ -32,9 +34,19 @@ fun Context.sendReminderNotification(
             ) {
                 setContentTitle(title)
                 setContentText(content)
+                actions.forEach {
+                    addAction(
+                        0,
+                        it.name,
+                        it.pendingIntent
+                    )
+                }
             }
         )
 }
+
+fun Context.cancelNotification(id: Int) =
+    NotificationManagerCompat.from(this).cancel(id)
 
 private fun Context.createNotification(
     channelId: String,
