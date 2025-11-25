@@ -94,6 +94,7 @@ class DashboardViewModel @Inject constructor(
             }
             realtimeJobs.clear()
             this@DashboardViewModel.device = newDevice
+            this@DashboardViewModel.selectedDeviceManagementMode = newDevice
             waterContainer = deviceRepository.getWaterContainer(newDevice.id)
             realtimeJobs.add(
                 launch {
@@ -172,7 +173,7 @@ class DashboardViewModel @Inject constructor(
             }
             wateringConfig = wateringRepository.getConfig()
             if (device == null) {
-                _uiEvent.emit(DashboardUiEvent.ShowSnackbar("Device not found"))
+                _uiEvent.emit(DashboardUiEvent.ShowSnackbar("Perangkat tidak ditemukan"))
                 showDeviceManagementDialog = true
             } else {
                 selectedDeviceManagementMode = device
@@ -232,7 +233,6 @@ class DashboardViewModel @Inject constructor(
                     )
                     devices.add(device)
                     if (devices.size == 1) {
-                        selectedDeviceManagementMode = device
                         updateDeviceInfo(device)
                     }
                 }

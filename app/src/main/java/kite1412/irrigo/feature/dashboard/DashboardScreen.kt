@@ -416,7 +416,10 @@ private fun DeviceManagement(
     onSave: (device: DeviceEdit) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var addMode by rememberSaveable { mutableStateOf(false) }
+    val forceAddMode = selectedDevice == null && devices.isEmpty()
+    var addMode by rememberSaveable(forceAddMode) {
+        mutableStateOf(forceAddMode)
+    }
     var deviceName by rememberSaveable(selectedDevice) {
         mutableStateOf(selectedDevice?.name ?: "")
     }
@@ -476,7 +479,7 @@ private fun DeviceManagement(
             )
         }
         AnimatedVisibility(
-            visible = !addMode && selectedDevice != null && devices.isNotEmpty()
+            visible = !addMode && !forceAddMode
         ) {
             selectedDevice?.let {
                 DeviceSelect(
@@ -519,10 +522,11 @@ private fun DeviceManagement(
         }
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = if (!forceAddMode) Arrangement.SpaceBetween
+                else Arrangement.End,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
+            if (!forceAddMode) Text(
                 text = if (addMode) "Batal" else "Tambah",
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
