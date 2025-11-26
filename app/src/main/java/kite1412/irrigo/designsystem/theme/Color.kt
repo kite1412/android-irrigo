@@ -3,6 +3,7 @@ package kite1412.irrigo.designsystem.theme
 import androidx.compose.ui.graphics.Color
 
 val PastelGreen = Color(0xFF7FBF8F)
+val PastelGreenDark = Color(0xFF658D6E)
 val Red = Color(0xFFF65252)
 val BoneWhite = Color(0xFFF5F5F5)
 val Charcoal = Color(0xFF454545)

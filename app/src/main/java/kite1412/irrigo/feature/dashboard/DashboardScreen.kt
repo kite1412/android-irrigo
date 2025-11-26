@@ -1,6 +1,7 @@
 package kite1412.irrigo.feature.dashboard
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -8,7 +9,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -55,6 +58,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.onSizeChanged
@@ -72,6 +76,12 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.Popup
 import androidx.core.app.ActivityCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import ir.ehsannarmani.compose_charts.LineChart
+import ir.ehsannarmani.compose_charts.models.GridProperties
+import ir.ehsannarmani.compose_charts.models.HorizontalIndicatorProperties
+import ir.ehsannarmani.compose_charts.models.LabelProperties
+import ir.ehsannarmani.compose_charts.models.Line
+import ir.ehsannarmani.compose_charts.models.StrokeStyle
 import kite1412.irrigo.designsystem.component.Button
 import kite1412.irrigo.designsystem.component.TextField
 import kite1412.irrigo.designsystem.theme.DarkGray
@@ -79,6 +89,8 @@ import kite1412.irrigo.designsystem.theme.DarkPastelBlue
 import kite1412.irrigo.designsystem.theme.Gray
 import kite1412.irrigo.designsystem.theme.LightPastelBlue
 import kite1412.irrigo.designsystem.theme.Orange
+import kite1412.irrigo.designsystem.theme.PastelGreen
+import kite1412.irrigo.designsystem.theme.PastelGreenDark
 import kite1412.irrigo.designsystem.theme.Red
 import kite1412.irrigo.designsystem.theme.Yellow
 import kite1412.irrigo.designsystem.theme.bodyExtraSmall
@@ -116,8 +128,9 @@ fun DashboardScreen(
     val device = viewModel.device
     val latestWaterCapacityLog = viewModel.latestWaterCapacityLog
     val waterContainer = viewModel.waterContainer
-    val latestWateringLogs = viewModel.latestWateringLogs
+    val wateringLogs = viewModel.wateringLogs
     val latestSoilMoistureLog = viewModel.latestSoilMoistureLog
+    val soilMoistureLogs = viewModel.soilMoistureLogs
     val wateringConfig = viewModel.wateringConfig
     val latestLightIntensityLog = viewModel.latestLightIntensityLog
     val snackbarHostState = LocalSnackbarHostState.current
@@ -194,17 +207,25 @@ fun DashboardScreen(
                     DeviceControlSection(
                         waterContainer = waterContainer,
                         latestWaterCapacityLog = latestWaterCapacityLog,
-                        latestWateringLogs = latestWateringLogs,
+                        latestWateringLogs = wateringLogs,
                         latestLightIntensityLog = latestLightIntensityLog,
                         onMoreWateringLog = onMoreWateringLogClick,
                         onWateringClick = viewModel::sendWateringSignal,
                         onAutomatedWateringClick = onAutomatedWateringSettingClick
                     )
-                    SoilMoisture(
-                        latest = latestSoilMoistureLog,
-                        minPercentage = wateringConfig?.minSoilMoisturePercent,
-                        onMinSettingClick = onSoilMoistureSettingClick
-                    )
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        SoilMoisture(
+                            latest = latestSoilMoistureLog,
+                            minPercentage = wateringConfig?.minSoilMoisturePercent,
+                            onMinSettingClick = onSoilMoistureSettingClick
+                        )
+                        if (
+                            soilMoistureLogs.isNotEmpty()
+                            && soilMoistureLogs.size > 1
+                        ) SoilMoistureChart(soilMoistureLogs)
+                    }
                 }
             }
         }
@@ -1238,7 +1259,18 @@ private fun LightIntensity(
                 }
             )
             Text(
-                text = if (latest != null) "${latest.lux} Lux" else "",
+                text = buildAnnotatedString {
+                    if (latest != null) {
+                        withStyle(
+                            style = SpanStyle(
+                                fontWeight = FontWeight.Bold
+                            )
+                        ) {
+                            append("${latest.lux}")
+                        }
+                        append(" Lux")
+                    }
+                },
                 style = MaterialTheme.typography.bodySmall.copy(
                     fontStyle = FontStyle.Italic
                 )
@@ -1249,6 +1281,84 @@ private fun LightIntensity(
             contentDescription = null,
             modifier = Modifier.size(40.dp),
             tint = color
+        )
+    }
+}
+
+@SuppressLint("RememberInComposition")
+@Composable
+private fun SoilMoistureChart(
+    // expect logs to be sorted by timestamp in descending order
+    logs: List<SoilMoistureLog>,
+    modifier: Modifier = Modifier
+) {
+    if (logs.size < 2) return
+
+    val take = 10
+    val logs = logs.take(take)
+        .filter { it.moisturePercent > 0 && it.moisturePercent <= 100 }
+        .asReversed()
+    val bodyExtraSmall = MaterialTheme.typography.bodyExtraSmall
+    val gridAxisProperties = GridProperties.AxisProperties(
+        style = StrokeStyle.Dashed(
+            intervals = floatArrayOf(20f, 20f)
+        )
+    )
+
+    Section(
+        name = "Statistik Kelembaban Tanah",
+        modifier = modifier
+    ) {
+        LineChart(
+            data = listOf(
+                Line(
+                    label = "Kelembaban (%)",
+                    values = logs.map(SoilMoistureLog::moisturePercent),
+                    color = Brush.linearGradient(
+                        colors = listOf(PastelGreenDark, PastelGreen)
+                    ),
+                    firstGradientFillColor = PastelGreenDark.copy(
+                        alpha = 0.2f
+                    ),
+                    secondGradientFillColor = PastelGreen.copy(
+                        alpha = 0.2f
+                    ),
+                    strokeProgress = Animatable(0.9f),
+                    gradientProgress = Animatable(0.9f),
+                    strokeAnimationSpec = tween(300),
+                    gradientAnimationSpec = tween(300),
+                    gradientAnimationDelay = 150
+                )
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(1.78f),
+            indicatorProperties = HorizontalIndicatorProperties(
+                textStyle = bodyExtraSmall.copy(
+                    fontWeight = FontWeight.Bold
+                ),
+                padding = 16.dp
+            ),
+            animationDelay = 0,
+            maxValue = 100.0,
+            labelProperties = LabelProperties(
+                enabled = true,
+                textStyle = bodyExtraSmall,
+                labels = logs
+                    .filterIndexed { i, _ ->
+                        i == 0 || i == logs.lastIndex
+                    }
+                    .map {
+                        it.timestamp.getLocalInstantInfo(
+                            timeFormat = "H:mm:ss"
+                        )
+                            .time
+                    }
+            ),
+            gridProperties = GridProperties(
+                xAxisProperties = gridAxisProperties,
+                yAxisProperties = gridAxisProperties
+            )
         )
     }
 }

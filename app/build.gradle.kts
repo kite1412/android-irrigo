@@ -91,6 +91,7 @@ dependencies {
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
+    implementation(libs.compose.charts)
 
     ksp(libs.hilt.compiler)
 

@@ -66,7 +66,8 @@ class DashboardViewModel @Inject constructor(
         private set
     var showDeviceManagementDialog by mutableStateOf(false)
     var showWateringWarningDialog by mutableStateOf(false)
-    val latestWateringLogs = mutableStateListOf<WateringLog>()
+    val wateringLogs = mutableStateListOf<WateringLog>()
+    val soilMoistureLogs = mutableStateListOf<SoilMoistureLog>()
 
     private val _uiEvent = MutableSharedFlow<DashboardUiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
@@ -104,7 +105,9 @@ class DashboardViewModel @Inject constructor(
                     waterCapacityRepository
                         .getLatestWaterCapacityLogFlow(newDevice.id)
                         .collect {
-                            latestWaterCapacityLog = it
+                            if (it.currentHeightCm >= 0) {
+                                latestWaterCapacityLog = it
+                            }
                         }
                 }
             )
@@ -120,8 +123,8 @@ class DashboardViewModel @Inject constructor(
                         }
                 }
             )
-            latestWateringLogs.clear()
-            latestWateringLogs.addAll(
+            wateringLogs.clear()
+            wateringLogs.addAll(
                 wateringRepository.getWateringLogs(newDevice.id)
                     .sortedByDescending { it.timestamp }
             )
@@ -130,7 +133,7 @@ class DashboardViewModel @Inject constructor(
                     wateringRepository
                         .getLatestWateringLog(newDevice.id)
                         .collect {
-                            latestWateringLogs.add(
+                            wateringLogs.add(
                                 index = 0,
                                 element = it
                             )
@@ -139,12 +142,23 @@ class DashboardViewModel @Inject constructor(
             )
             realtimeJobs.add(
                 launch {
+                    soilMoistureLogs.addAll(
+                        soilMoistureLogRepository
+                            .getSoilMoistureLogs(newDevice.id)
+                            .sortedByDescending { it.timestamp }
+                    )
                     latestSoilMoistureLog = soilMoistureLogRepository
                         .getSoilMoistureLogs(newDevice.id)
                         .maxByOrNull { it.timestamp }
                     soilMoistureLogRepository.getLatestSoilMoistureLog(newDevice.id)
                         .collect {
-                            latestSoilMoistureLog = it
+                            if (it.moisturePercent > 0 && it.moisturePercent <= 100) {
+                                latestSoilMoistureLog = it
+                                soilMoistureLogs.add(
+                                    index = 0,
+                                    element = it
+                                )
+                            }
                         }
                 }
             )
