@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -108,6 +109,7 @@ import kite1412.irrigo.model.WaterContainer
 import kite1412.irrigo.model.WateringLog
 import kite1412.irrigo.ui.component.DeviceSelect
 import kite1412.irrigo.ui.component.LoadingIndicator
+import kite1412.irrigo.ui.compositionlocal.LocalNavBarSizeInfo
 import kite1412.irrigo.ui.compositionlocal.LocalScaffoldBarsController
 import kite1412.irrigo.ui.compositionlocal.LocalSnackbarHostState
 import kite1412.irrigo.util.getLocalInstantInfo
@@ -143,6 +145,7 @@ fun DashboardScreen(
         contract = ActivityResultContracts.RequestPermission()
     ) {}
     val context = LocalContext.current
+    val navBarSize = LocalNavBarSizeInfo.current
 
     LaunchedEffect(Unit) {
         launch {
@@ -170,7 +173,10 @@ fun DashboardScreen(
         modifier = modifier
     ) {
         if (it != null) LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            contentPadding = PaddingValues(
+                bottom = navBarSize.height + 16.dp
+            )
         ) {
             item {
                 Row(

@@ -10,8 +10,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -26,6 +33,8 @@ import kite1412.irrigo.feature.devicesettings.util.Setting
 import kite1412.irrigo.feature.logs.navigation.logsScreen
 import kite1412.irrigo.feature.logs.navigation.navigateToLogs
 import kite1412.irrigo.feature.logs.util.LogsGroupType
+import kite1412.irrigo.ui.compositionlocal.LocalNavBarSizeInfo
+import kite1412.irrigo.ui.util.ComponentSizeInfo
 import kite1412.irrigo.util.Destination
 
 @Composable
@@ -81,6 +90,13 @@ private fun Scaffold(
     appBarSubtitle: String? = null,
     content: @Composable () -> Unit
 ) {
+    var navBarHeight by remember {
+        mutableStateOf(0.dp)
+    }
+    var navBarWidth by remember {
+        mutableStateOf(0.dp)
+    }
+
     Box(
         modifier = modifier
     ) {
@@ -96,7 +112,13 @@ private fun Scaffold(
                     subtitle = appBarSubtitle
                 )
             }
-            content()
+            CompositionLocalProvider(
+                LocalNavBarSizeInfo provides ComponentSizeInfo(
+                    height = navBarHeight,
+                    width = navBarWidth
+                ),
+                content = content
+            )
         }
         if (destinations.isNotEmpty()) AnimatedVisibility(
             visible = showNavBar,
@@ -104,10 +126,18 @@ private fun Scaffold(
             enter = slideInVertically { -it } + fadeIn(),
             exit = slideOutVertically { it } + fadeOut()
         ) {
+            val density = LocalDensity.current
+
             IrrigoNavBar(
                 destinations = destinations,
                 onDestinationSelected = onDestinationSelected,
-                selectedDestination = selectedDestination ?: destinations.first()
+                selectedDestination = selectedDestination ?: destinations.first(),
+                modifier = Modifier.onGloballyPositioned {
+                    with(density) {
+                        navBarHeight = it.size.height.toDp()
+                        navBarWidth = it.size.width.toDp()
+                    }
+                }
             )
         }
     }
