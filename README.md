@@ -50,3 +50,7 @@ SERVER_URL_WS=<backend base websocket url>
     ```bash
     adb install app/release/app-release.apk
     ```
+
+## 🔗 Related Projects
+- [Backend Repository](https://github.com/kite1412/irrigo-be)
+
