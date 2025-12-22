@@ -8,7 +8,7 @@ plugins {
     kotlin("plugin.serialization")
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
-    alias(libs.plugins.google.services)
+//    alias(libs.plugins.google.services)
 }
 
 val localProperties = Properties().apply {
@@ -89,8 +89,8 @@ dependencies {
     implementation(libs.ktor.client.websockets)
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
-    implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.messaging)
+//    implementation(platform(libs.firebase.bom))
+//    implementation(libs.firebase.messaging)
     implementation(libs.compose.charts)
 
     ksp(libs.hilt.compiler)
