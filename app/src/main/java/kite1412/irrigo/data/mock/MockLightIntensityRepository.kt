@@ -17,7 +17,7 @@ class MockLightIntensityRepository @Inject constructor() : LightIntensityLogRepo
     override fun getLatestLightIntensityLog(deviceId: Int): Flow<LightIntensityLog> = channelFlow {
         var id = 0
         while (isActive) {
-            val lux = Random.nextDouble(0.0, 1200.0)
+            val lux = Random.nextDouble(300.0, 350.0)
             send(
                 LightIntensityLog(
                     id = --id,
@@ -33,7 +33,7 @@ class MockLightIntensityRepository @Inject constructor() : LightIntensityLogRepo
 
     override suspend fun getLightIntensityLogs(deviceId: Int): List<LightIntensityLog> =
         List(20) { i ->
-            val lux = Random.nextDouble(0.0, 1200.0)
+            val lux = Random.nextDouble(300.0, 350.0)
             LightIntensityLog(
                 id = i + 1,
                 device = MockData.devices.first(),

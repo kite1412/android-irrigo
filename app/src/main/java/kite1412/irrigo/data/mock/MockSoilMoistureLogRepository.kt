@@ -20,7 +20,7 @@ class MockSoilMoistureLogRepository @Inject constructor() : SoilMoistureLogRepos
                 val latestLog = SoilMoistureLog(
                     id = --id,
                     device = MockData.devices.first(),
-                    moisturePercent = (30 until 100).random() + Random.nextDouble(0.0, 1.0),
+                    moisturePercent = (50 until 60).random() + Random.nextDouble(0.0, 1.0),
                     timestamp = now()
                 )
 
@@ -34,7 +34,7 @@ class MockSoilMoistureLogRepository @Inject constructor() : SoilMoistureLogRepos
             SoilMoistureLog(
                 id = index + 1,
                 device = MockData.devices.first(),
-                moisturePercent = (50..100).random() + (0..99).random() / 100.0,
+                moisturePercent = (50..60).random() + (0..99).random() / 100.0,
                 timestamp = now() - Duration.parse("${index}h")
             )
         }

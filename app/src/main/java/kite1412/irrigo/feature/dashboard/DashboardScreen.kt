@@ -1272,7 +1272,13 @@ private fun LightIntensity(
                                 fontWeight = FontWeight.Bold
                             )
                         ) {
-                            append("${latest.lux}")
+                            append(
+                                String.format(
+                                    locale = null,
+                                    format = "%.2f",
+                                    latest.lux
+                                )
+                            )
                         }
                         append(" Lux")
                     }
