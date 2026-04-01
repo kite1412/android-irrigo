@@ -1,5 +1,5 @@
 # Irrigo
-An Android application for smart irrigation system monitoring & control. Monitor soil moisture and control irrigation devices with manual controls, automation settings, notifications, and activity logs.
+An Android application for smart irrigation system monitoring & control. Monitor soil moisture and control irrigation devices with manual controls, automation settings, notifications, and activity logs. [See the demo here.](https://kite1412.vercel.app/?demo=irrigo)
 
 ## ✨ Features
 
